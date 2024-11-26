@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>瑞瑞和华华 - 主页</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* 页面整体样式 */
+        body {
+            background: linear-gradient(135deg, #f6f8fc 0%, #dfe6f6 100%);
+            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        /* 导航栏样式 */
+        .navbar {
+            background: #374aae !important;
+            box-shadow: 0 2px 10px rgba(55, 74, 174, 0.2);
+            padding: 0.8rem 0;
+        }
+
+        .navbar-brand {
+            font-weight: 600;
+            font-size: 1.2rem;
+            color: white !important;
+        }
+
+        .nav-link {
+            color: rgba(255, 255, 255, 0.85) !important;
+            padding: 0.5rem 1rem !important;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border-radius: 6px;
+            margin: 0 0.2rem;
+        }
+
+        .nav-link:hover {
+            color: white !important;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-link.active {
+            color: white !important;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* 主要内容区域 */
+        .main-container {
+            padding: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        /* 调整布局间距 */
+        .main-container {
+            padding: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        /* 调整卡片样式 */
+        .stats-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            height: 100%;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease;
+        }
+
+        .stats-card:hover {
+            transform: translateY(-5px);
+        }
+
+        /* 调整统计数字样式 */
+        .stats-number {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #374aae;
+            margin-bottom: 0.5rem;
+        }
+
+        /* 调整列表样式 */
+        .upcoming-list {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            margin-top: 1.5rem;
+        }
+
+        .upcoming-item {
+            padding: 1rem;
+            border-radius: 10px;
+            background: #f8f9fa;
+            margin-bottom: 1rem;
+            transition: transform 0.3s ease;
+        }
+
+        .upcoming-item:hover {
+            transform: translateX(5px);
+            background: #f1f3f9;
+        }
+
+        /* 添加图标样式 */
+        .stats-icon {
+            font-size: 2rem;
+            color: #374aae;
+            opacity: 0.2;
+            position: absolute;
+            right: 1.5rem;
+            top: 1.5rem;
+        }
+
+        /* 添加分类标题样式 */
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #374aae;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section-title i {
+            font-size: 1.1rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                <i class="fas fa-birthday-cake me-2"></i>瑞瑞和华华
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="index.html">
+                            <i class="fas fa-home me-1"></i>首页
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="birthday.html">
+                            <i class="fas fa-birthday-cake me-1"></i>生日
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="anniversary.html">
+                            <i class="fas fa-heart me-1"></i>纪念日
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="countdown.html">
+                            <i class="fas fa-hourglass-half me-1"></i>倒数日
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="profile.html">
+                            <i class="fas fa-user me-1"></i>我的
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要内容区域 -->
+    <div class="container main-container">
+        <!-- 问候语区域 -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h2 class="text-white" id="greetingText"></h2>
+            </div>
+        </div>
+
+        <!-- 新闻列表 -->
+        <div class="row g-4">
+            <div class="col-12">
+                <div id="newsList">
+                    <!-- 新闻内容将由JavaScript动态填充 -->
+                </div>
+            </div>
+        </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/index.js"></script>
+</body>
+</html> 
