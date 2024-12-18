@@ -11,5 +11,9 @@
       "src": "/api/(.*)",
       "dest": "/backend/app.js"
     }
-  ]
+  ],
+  "env": {
+    "NODE_ENV": "production",
+    "PORT": "3000"
+  }
 }
