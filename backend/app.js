@@ -14,12 +14,7 @@ const app = express();
 
 // CORS 配置
 app.use(cors({
-    origin: [
-        'http://localhost:5500', 
-        'http://127.0.0.1:5500',
-        'http://ruiruihehuahua.w1.luyouxia.net',
-        'https://ruiruihehuahua.netlify.app'  // 添加 Netlify 域名
-    ],
+    origin: '*',  // 允许所有域名访问
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
     credentials: true
