@@ -92,6 +92,12 @@ initializeDatabase().then(() => {
     console.log('应用初始化完成，时间:', new Date().toISOString());
     console.log('环境:', process.env.NODE_ENV);
     console.log('数据库 URL:', process.env.DATABASE_URL ? '已配置' : '未配置');
+    
+    // 添加端口监听
+    const port = process.env.PORT || 3000;
+    app.listen(port, () => {
+        console.log(`服务器运行在端口 ${port}`);
+    });
 });
 
 // 导出应用实例
