@@ -29,7 +29,12 @@ app.use(express.json());
 
 // API 状态检查路由
 app.get('/api/status', (req, res) => {
-    res.json({ status: 'online' });
+    console.log('收到状态检查请求');
+    res.json({ 
+        status: 'online',
+        time: new Date().toISOString(),
+        env: process.env.NODE_ENV
+    });
 });
 
 // 路由
@@ -82,7 +87,11 @@ async function initializeDatabase() {
 }
 
 // 初始化数据库
-initializeDatabase();
+initializeDatabase().then(() => {
+    console.log('应用初始化完成，时间:', new Date().toISOString());
+    console.log('环境:', process.env.NODE_ENV);
+    console.log('数据库 URL:', process.env.DATABASE_URL ? '已配置' : '未配置');
+});
 
 // 导出应用实例
 module.exports = app;
