@@ -82,14 +82,7 @@ async function initializeDatabase() {
 }
 
 // 初始化数据库
-initializeDatabase().then(success => {
-    if (success) {
-        // 启动服务器
-        const port = config.app.port || 3000;
-        app.listen(port, () => {
-            console.log(`服务器运行在端口 ${port}`);
-        });
-    }
-});
+initializeDatabase();
 
+// 导出应用实例
 module.exports = app;
