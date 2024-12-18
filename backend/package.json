@@ -5,9 +5,7 @@
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
-    "dev": "nodemon app.js --ignore '../frontend/'",
-    "vercel-build": "echo 'Build step completed'",
-    "vercel-start": "node app.js"
+    "dev": "nodemon app.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.3",
@@ -30,5 +28,8 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "engines": {
+    "node": ">=14.0.0"
+  }
 }
