@@ -29,7 +29,7 @@
 
 1. 克隆仓库
 ```bash
-git clone [仓库地址]
+git clone https://github.com/mxhaljr/ruiruihehuahua.git
 ```
 
 2. 安装依赖
@@ -64,7 +64,7 @@ project/
 │   ├── config/         # 配置文件
 │   ├── controllers/    # 控制器
 │   ├── models/        # 数据模型
-│   ├─�� routes/        # 路由
+│   ├── routes/        # 路由
 │   └── utils/         # 工具函数
 │
 └── frontend/           # 前端代码
