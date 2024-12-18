@@ -11,6 +11,11 @@
 - 数据加密存储
 - 邮件提醒服务
 
+## 在线访问
+
+- 前端地址：[Netlify](https://ruiruihehuahua.netlify.app)
+- 后端地址：[Vercel](https://ruiruihehuahua.vercel.app)
+
 ## 技术栈
 
 ### 前端
@@ -18,12 +23,14 @@
 - CSS3
 - JavaScript (原生)
 - CryptoJS (数据加密)
+- Netlify (部署)
 
 ### 后端
 - Node.js
 - Express
 - Sequelize (MySQL ORM)
 - Nodemailer (邮件服务)
+- Vercel (部署)
 
 ## 安装和运行
 
@@ -55,6 +62,30 @@ npm start
 
 # 前端直接打开index.html或使用Live Server
 ```
+
+## 部署说明
+
+### 前端部署 (Netlify)
+1. 在Netlify上创建新项目
+2. 连接GitHub仓库
+3. 设置构建配置：
+   - 构建命令：不需要
+   - 发布目录：`frontend`
+4. 设置环境变量：
+   - `VITE_API_BASE_URL`: 后端API地址
+
+### 后端部署 (Vercel)
+1. 在Vercel上创建新项目
+2. 连接GitHub仓库
+3. 设置构建配置：
+   - 构建命令：`cd backend && npm install`
+   - 输出目录：`backend`
+4. 设置环境变量：
+   - `DATABASE_URL`: 数据库连接URL
+   - `JWT_SECRET`: JWT密钥
+   - `EMAIL_USER`: 邮箱账号
+   - `EMAIL_PASS`: 邮箱密码
+   - `CORS_ORIGIN`: 前端域名
 
 ## 项目结构
 
