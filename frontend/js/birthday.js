@@ -1,25 +1,51 @@
 class BirthdayManager {
     constructor() {
-        // 移除构造函数中的DOMContentLoaded事件监听
         this.form = document.getElementById('birthdayForm');
         this.listContainer = document.getElementById('birthdayList');
-        this.modal = new bootstrap.Modal(document.getElementById('birthdayModal'));
+        this.modal = document.getElementById('birthdayModal');
         this.saveButton = document.getElementById('saveButton');
         this.currentEditId = null;
+        this.allBirthdays = [];  // 初始化数组
+        
+        // 检查用户是否已登录
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = 'login.html';
+            return;
+        }
+
         this.initEventListeners();
         this.loadBirthdays();
+        
+        // 添加移动端触摸支持
+        this.initTouchEvents();
+
+        // 初始化返回顶部功能
+        this.initBackToTop();
     }
 
     initEventListeners() {
         // 确保saveButton存在
         if (this.saveButton) {
             this.saveButton.addEventListener('click', () => {
-                console.log('保存按钮被点击'); // 添加日志
                 this.handleSave();
             });
-        } else {
-            console.error('保存按钮未找到');
         }
+
+        // 关闭模态框时重置表单
+        this.modal.addEventListener('close', () => {
+            this.form.reset();
+            this.currentEditId = null;
+            document.getElementById('modalTitle').textContent = '添加生日';
+        });
+    }
+
+    showModal() {
+        this.modal.showModal();
+    }
+
+    closeModal() {
+        this.modal.close();
     }
 
     async loadBirthdays() {
@@ -29,76 +55,87 @@ class BirthdayManager {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }
             });
-            if (!response.ok) throw new Error('获取生日列表失败');
             
-            const birthdays = await response.json();
-            this.updateCounts(birthdays);
-            this.renderBirthdayList(birthdays);
-            return birthdays;
+            if (!response.ok) {
+                throw new Error('获取生日列表失败');
+            }
+            
+            this.allBirthdays = await response.json();  // 保存数据到实例属性
+            
+            if (this.allBirthdays.length === 0) {
+                // 使用新的卡片样式显示空状态
+                this.listContainer.innerHTML = `
+                    <div class="birthday-card">
+                        <div class="card-body text-center">
+                            <div class="empty-state">
+                                <span class="empty-icon">🎂</span>
+                                <h3>还没有添加任何生日</h3>
+                                <p>点击右上角的"添加生日"开始添加吧！</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                this.renderBirthdayList(this.allBirthdays);
+            }
+            
+            this.updateCounts(this.allBirthdays);
+            return this.allBirthdays;
         } catch (error) {
             console.error('加载生日列表失败:', error);
-            alert('加载生日列表失败');
+            this.listContainer.innerHTML = `
+                <div class="birthday-card">
+                    <div class="card-body text-center">
+                        <div class="error-state">
+                            <span class="error-icon">❌</span>
+                            <h3>加载失败</h3>
+                            <p>${error.message}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
     }
 
     renderBirthdayList(birthdays) {
+        // 检测是否为移动端
+        const isMobile = window.innerWidth <= 768;
+        
         this.listContainer.innerHTML = birthdays.map(birthday => `
-            <div class="col-12 mb-3">
-                <div class="card h-100 border-0 shadow-sm">
-                    <div class="card-body p-0">
-                        <div class="d-flex align-items-center p-3 border-bottom">
-                            <div class="avatar-circle me-3 ${this.getRandomColor()}" style="
-                                width: 48px;
-                                height: 48px;
-                                font-size: 1.5rem;
-                                display: flex;
-                                align-items: center;
-                                justify-content: center;
-                                border-radius: 50%;
-                                color: white;
-                                font-weight: 600;
-                            ">
-                                ${this.decrypt(birthday.name).charAt(0)}
-                            </div>
-                            <div class="flex-grow-1">
-                                <h5 class="mb-0 fw-bold">${this.decrypt(birthday.name)}</h5>
-                                <small class="text-muted">
-                                    ${new Date(birthday.birth_date).toLocaleDateString()}
-                                    <span class="badge ms-2 ${birthday.lunar ? 'bg-warning' : 'bg-info'}">
-                                        ${birthday.lunar ? '农历' : '阳历'}
-                                    </span>
-                                </small>
-                            </div>
-                            <div class="d-flex gap-2">
-                                <button class="btn btn-icon" onclick="birthdayManager.editBirthday(${birthday.id})">
-                                    <i class="fas fa-edit text-primary"></i>
-                                </button>
-                                <button class="btn btn-icon" onclick="birthdayManager.deleteBirthday(${birthday.id})">
-                                    <i class="fas fa-trash-alt text-danger"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="px-3 py-2 bg-light">
-                            <div class="row g-2">
-                                <div class="col-auto">
-                                    <div class="d-flex align-items-center">
-                                        <i class="fas fa-bell me-2 text-warning"></i>
-                                        <span class="badge bg-light text-dark border">
-                                            ${this.getReminderText(birthday.reminder_days)}
-                                        </span>
-                                    </div>
-                                </div>
-                                ${birthday.description ? `
-                                    <div class="col">
-                                        <div class="d-flex align-items-center">
-                                            <i class="fas fa-comment-alt me-2 text-info"></i>
-                                            <span class="text-muted">${this.decrypt(birthday.description)}</span>
-                                        </div>
-                                    </div>
-                                ` : ''}
-                            </div>
+            <div class="birthday-card">
+                <div class="card-header">
+                    <div class="avatar-circle ${this.getRandomColor()}">
+                        ${this.decrypt(birthday.name).charAt(0)}
+                    </div>
+                    <div class="card-info">
+                        <h3>${this.decrypt(birthday.name)}</h3>
+                        <div class="date-info">
+                            ${new Date(birthday.birth_date).toLocaleDateString()}
+                            <span class="badge ${birthday.lunar ? 'lunar' : 'solar'}">
+                                ${birthday.lunar ? '农历' : '阳历'}
+                            </span>
                         </div>
                     </div>
+                    <div class="card-actions">
+                        <button class="action-btn" onclick="birthdayManager.editBirthday(${birthday.id})">
+                            ${isMobile ? '编辑' : '✏️'}
+                        </button>
+                        <button class="action-btn" onclick="birthdayManager.deleteBirthday(${birthday.id})">
+                            ${isMobile ? '删除' : '🗑️'}
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="reminder-info">
+                        <span class="reminder-badge">
+                            ${this.getReminderText(birthday.reminder_days)}
+                        </span>
+                    </div>
+                    ${birthday.description ? `
+                        <div class="description">
+                            ${this.decrypt(birthday.description)}
+                        </div>
+                    ` : ''}
                 </div>
             </div>
         `).join('');
@@ -120,7 +157,7 @@ class BirthdayManager {
     getReminderText(days) {
         switch(parseInt(days)) {
             case 0:
-                return '当天提醒';
+                return '天提醒';
             case 1:
                 return '提前1天';
             case 2:
@@ -134,7 +171,7 @@ class BirthdayManager {
 
     // 加密函数
     encrypt(text) {
-        // 将文本转换为Base64，然后进行字符替换
+        // 将文本转换为Base64，然后进行字符替
         const base64 = btoa(unescape(encodeURIComponent(text)));
         return base64.split('').map(char => {
             // 自定义字符映射表
@@ -189,7 +226,6 @@ class BirthdayManager {
     }
 
     async handleSave() {
-        console.log('handleSave被调用'); // 添加日志
         // 获取表单数据
         const name = document.getElementById('name').value.trim();
         const birth_date = document.getElementById('birth_date').value;
@@ -199,7 +235,7 @@ class BirthdayManager {
 
         // 验证必填字段
         if (!name || !birth_date) {
-            alert('请填写必填字段');
+            this.showToast('请填写必填字段', 'error');
             return;
         }
 
@@ -213,42 +249,72 @@ class BirthdayManager {
         };
 
         try {
+            let response;
             if (this.currentEditId) {
-                await this.updateBirthday(this.currentEditId, birthdayData);
+                // 更新生日
+                response = await fetch(`${window.app.apiBaseUrl}/birthdays/${this.currentEditId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify(birthdayData)
+                });
             } else {
-                await this.createBirthday(birthdayData);
+                // 添加新生日
+                response = await fetch(`${window.app.apiBaseUrl}/birthdays`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify(birthdayData)
+                });
             }
+
+            if (!response.ok) {
+                throw new Error('保存失败');
+            }
+
+            // 重新加载数据
+            await this.loadBirthdays();
             
-            this.modal.hide();
+            // 显示成功提示
+            this.showToast(this.currentEditId ? '更新成功' : '添加成功');
+            
+            // 关闭模态框并重置表单
+            this.closeModal();
             this.form.reset();
             this.currentEditId = null;
-            await this.loadBirthdays();
         } catch (error) {
             console.error('保存失败:', error);
-            alert('保存失败');
+            this.showToast('保存失败，请重试', 'error');
         }
     }
 
-    async createBirthday(birthdayData) {
-        console.log('发送到后端的数据:', birthdayData);  // 添加日志
-        const response = await fetch(`${window.app.apiBaseUrl}/birthdays`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            },
-            body: JSON.stringify(birthdayData)
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || '添加生日失败');
+    editBirthday(id) {
+        // 找到要编辑的生日数据
+        const birthday = this.allBirthdays.find(b => b.id === id);
+        if (!birthday) {
+            this.showToast('未找到生日信息', 'error');
+            return;
         }
-        alert('添加成功！');
+
+        // 解密数据并填充表单
+        document.getElementById('name').value = this.decrypt(birthday.name);
+        document.getElementById('birth_date').value = birthday.birth_date.split('T')[0];
+        document.getElementById('lunar').checked = birthday.lunar === 1;
+        document.getElementById('description').value = birthday.description ? this.decrypt(birthday.description) : '';
+        document.getElementById('reminder_days').value = Math.min(Math.max(birthday.reminder_days, 0), 3);
+        
+        // 设置当前编辑ID并显示模态框
+        this.currentEditId = id;
+        document.getElementById('modalTitle').textContent = '编辑生日';
+        this.showModal();
     }
 
     async deleteBirthday(id) {
-        if (!confirm('确定要删除这条生日信息吗？')) return;
+        if (!await this.showConfirm('确定要删除这条生日信息吗？')) return;
 
         try {
             const response = await fetch(`${window.app.apiBaseUrl}/birthdays/${id}`, {
@@ -258,129 +324,54 @@ class BirthdayManager {
                 }
             });
 
-            if (!response.ok) throw new Error('删除失败');
-            
-            this.loadBirthdays();
-            alert('删除成功！');
+            if (!response.ok) {
+                throw new Error('删除失败');
+            }
+
+            // 重新加载数据
+            await this.loadBirthdays();
+            this.showToast('删除成功');
         } catch (error) {
             console.error('删除失败:', error);
-            alert('删除失败');
+            this.showToast('删除失败，请重试', 'error');
         }
-    }
-
-    async editBirthday(id) {
-        try {
-            const response = await fetch(`${window.app.apiBaseUrl}/birthdays/${id}`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
-            });
-            
-            if (!response.ok) throw new Error('获取生日信息失败');
-            
-            const birthday = await response.json();
-            
-            // 解密数据后填充表单
-            document.getElementById('name').value = this.decrypt(birthday.name);
-            document.getElementById('birth_date').value = birthday.birth_date.split('T')[0];
-            document.getElementById('lunar').checked = birthday.lunar === 1;
-            document.getElementById('description').value = birthday.description ? this.decrypt(birthday.description) : '';
-            document.getElementById('reminder_days').value = Math.min(Math.max(birthday.reminder_days, 0), 3);
-            
-            this.currentEditId = id;
-            document.getElementById('modalTitle').textContent = '编辑生日';
-            this.modal.show();
-        } catch (error) {
-            console.error('编辑失败:', error);
-            alert('获取生日信息失败');
-        }
-    }
-
-    async updateBirthday(id, birthdayData) {
-        const response = await fetch(`${window.app.apiBaseUrl}/birthdays/${id}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            },
-            body: JSON.stringify(birthdayData)
-        });
-
-        if (!response.ok) throw new Error('更新失败');
-        alert('更新成功！');
     }
 
     // 显示所有生日
-    async showAllBirthdays() {
+    showAllBirthdays() {
         this.setActiveTab('total');
-        await this.loadBirthdays();
+        this.renderBirthdayList(this.allBirthdays);
     }
 
     // 显示即将到来的生日
-    async showUpcomingBirthdays() {
+    showUpcomingBirthdays() {
         this.setActiveTab('upcoming');
-        try {
-            const birthdays = await this.loadBirthdays();
-            const upcomingBirthdays = birthdays.filter(birthday => {
-                const birthdayDate = new Date(birthday.birth_date);
-                const today = new Date();
-                const diff = this.getDateDiff(today, birthdayDate);
-                return diff <= 3 && diff >= 0;
-            });
-            
-            if (upcomingBirthdays.length === 0) {
-                this.listContainer.innerHTML = `
-                    <div class="col-12">
-                        <div class="card h-100 border-0 shadow-sm">
-                            <div class="card-body text-center p-5">
-                                <i class="fas fa-birthday-cake text-muted mb-3" style="font-size: 3rem;"></i>
-                                <h5 class="text-muted">最近3天内没有生日哦，快去添加生日吧！</h5>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                return;
-            }
-            
-            this.renderBirthdayList(upcomingBirthdays);
-        } catch (error) {
-            console.error('加载即将到来的生日失败:', error);
-        }
+        const now = new Date();
+        // 过滤未来3天内的生日
+        const upcomingBirthdays = this.allBirthdays.filter(birthday => {
+            const birthDate = new Date(birthday.birth_date);
+            const diff = this.getDateDiff(now, birthDate);
+            return diff >= 0 && diff <= 3;
+        });
+        this.renderBirthdayList(upcomingBirthdays);
     }
 
     // 显示当月生日
-    async showMonthBirthdays() {
+    showMonthBirthdays() {
         this.setActiveTab('month');
-        try {
-            const birthdays = await this.loadBirthdays();
-            const today = new Date();
-            const currentMonth = today.getMonth();
-            const currentDate = today.getDate();
-            
-            const monthBirthdays = birthdays.filter(birthday => {
-                const birthdayDate = new Date(birthday.birth_date);
-                return birthdayDate.getMonth() === currentMonth && 
-                       birthdayDate.getDate() === currentDate;
-            });
-            
-            if (monthBirthdays.length === 0) {
-                this.listContainer.innerHTML = `
-                    <div class="col-12">
-                        <div class="card h-100 border-0 shadow-sm">
-                            <div class="card-body text-center p-5">
-                                <i class="fas fa-calendar-alt text-muted mb-3" style="font-size: 3rem;"></i>
-                                <h5 class="text-muted">今天没有生日哦，快去添加生日吧！</h5>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                return;
-            }
-            
-            this.renderBirthdayList(monthBirthdays);
-        } catch (error) {
-            console.error('加载当月生日失败:', error);
-        }
+        const currentMonth = new Date().getMonth() + 1;
+        // 过滤当月的生日
+        const monthBirthdays = this.allBirthdays.filter(birthday => {
+            const birthDate = new Date(birthday.birth_date);
+            return birthDate.getMonth() + 1 === currentMonth;
+        });
+        this.renderBirthdayList(monthBirthdays);
+    }
+
+    // 计算日期差（天数）
+    getDateDiff(date1, date2) {
+        const oneDay = 24 * 60 * 60 * 1000;
+        return Math.round((date2 - date1) / oneDay);
     }
 
     // 设置活动标签
@@ -412,7 +403,7 @@ class BirthdayManager {
         }).length;
         document.getElementById('upcomingCount').textContent = upcomingCount;
         
-        // 当月当天生日数
+        // 月当天生日数
         const monthCount = birthdays.filter(birthday => {
             const birthdayDate = new Date(birthday.birth_date);
             return birthdayDate.getMonth() === currentMonth && 
@@ -421,17 +412,113 @@ class BirthdayManager {
         document.getElementById('monthCount').textContent = monthCount;
     }
 
-    // 计算日期差
-    getDateDiff(date1, date2) {
-        const oneDay = 24 * 60 * 60 * 1000;
-        return Math.round((date2 - date1) / oneDay);
+    // 添加移动端触摸事件支持
+    initTouchEvents() {
+        let startX = 0;
+        let currentX = 0;
+        const sidebar = document.querySelector('.sidebar');
+
+        sidebar.addEventListener('touchstart', (e) => {
+            startX = e.touches[0].clientX - sidebar.scrollLeft;
+        });
+
+        sidebar.addEventListener('touchmove', (e) => {
+            if (!startX) return;
+            e.preventDefault();
+            currentX = e.touches[0].clientX;
+            sidebar.scrollLeft = startX - currentX;
+        });
+
+        sidebar.addEventListener('touchend', () => {
+            startX = currentX = 0;
+        });
+    }
+
+    // 初始化返回顶部功能
+    initBackToTop() {
+        const backToTopBtn = document.getElementById('backToTop');
+        
+        // 监听滚动事件
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 200) {
+                backToTopBtn.style.display = 'flex';
+            } else {
+                backToTopBtn.style.display = 'none';
+            }
+        });
+
+        // 点击返回顶部
+        backToTopBtn.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+    }
+
+    // 添加提示框方法
+    showToast(message, type = 'success') {
+        // 移除所有现有的toast
+        document.querySelectorAll('.toast').forEach(t => t.remove());
+
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+
+        // 动画显示
+        requestAnimationFrame(() => {
+            toast.classList.add('show');
+        });
+
+        // 2秒后消失
+        setTimeout(() => {
+            toast.classList.remove('show');
+            // 等待过渡动画完成后移除元素
+            setTimeout(() => toast.remove(), 300);
+        }, 2000);
+    }
+
+    // 添加确认框方法
+    showConfirm(message) {
+        return new Promise((resolve) => {
+            const confirmBox = document.createElement('div');
+            confirmBox.className = 'confirm-box';
+            confirmBox.innerHTML = `
+                <div class="confirm-content">
+                    <p>${message}</p>
+                    <div class="confirm-buttons">
+                        <button class="btn-cancel">取消</button>
+                        <button class="btn-confirm">确定</button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(confirmBox);
+            setTimeout(() => confirmBox.classList.add('show'), 10);
+
+            // 绑定按钮事件
+            const cancelBtn = confirmBox.querySelector('.btn-cancel');
+            const confirmBtn = confirmBox.querySelector('.btn-confirm');
+
+            const cleanup = (result) => {
+                confirmBox.classList.remove('show');
+                setTimeout(() => confirmBox.remove(), 300);
+                resolve(result);
+            };
+
+            cancelBtn.onclick = () => cleanup(false);
+            confirmBtn.onclick = () => cleanup(true);
+        });
     }
 }
 
-// 修改初始化方式
-document.addEventListener('DOMContentLoaded', () => {
-    // 确保DOM完全加载后再初始化
-    setTimeout(() => {
-        window.birthdayManager = new BirthdayManager();
-    }, 0);
-}); 
+// 添加窗口大小变化监听
+window.addEventListener('resize', () => {
+    if (window.birthdayManager) {
+        window.birthdayManager.loadBirthdays();
+    }
+});
+
+// 初始化
+window.birthdayManager = new BirthdayManager(); 

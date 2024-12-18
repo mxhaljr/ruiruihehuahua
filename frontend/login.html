@@ -3,237 +3,107 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>登录 - 生日提醒网站</title>
-    <link href="https://cdn.bootcdn.net/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="css/style.css" rel="stylesheet">
-    <style>
-        body {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 40px 0;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 1000px;
-            margin: 0 auto;
-        }
-
-        .login-wrapper {
-            display: flex;
-            background: white;
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-        }
-
-        .login-banner {
-            flex: 1;
-            background: linear-gradient(135deg, #6B73FF 0%, #000DFF 100%);
-            padding: 40px;
-            color: white;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .login-banner::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('https://api.iconify.design/clarity/calendar-line.svg?color=white') no-repeat center center;
-            background-size: 200px;
-            opacity: 0.1;
-        }
-
-        .login-banner h1 {
-            font-size: 2.5em;
-            font-weight: 700;
-            margin-bottom: 20px;
-            position: relative;
-        }
-
-        .login-banner p {
-            font-size: 1.1em;
-            opacity: 0.9;
-            line-height: 1.8;
-            position: relative;
-        }
-
-        .login-form {
-            flex: 1;
-            padding: 40px 50px;
-            background: white;
-        }
-
-        .form-title {
-            color: #2c3e50;
-            font-weight: 600;
-            margin-bottom: 40px;
-            text-align: center;
-            font-size: 1.8em;
-            position: relative;
-        }
-
-        .form-title::after {
-            content: '';
-            position: absolute;
-            bottom: -10px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 50px;
-            height: 3px;
-            background: linear-gradient(to right, #6B73FF, #000DFF);
-            border-radius: 3px;
-        }
-
-        .input-group {
-            position: relative;
-            margin-bottom: 25px;
-        }
-
-        .input-group i {
-            position: absolute;
-            left: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #6B73FF;
-            font-size: 1.2em;
-        }
-
-        .form-control {
-            height: 50px;
-            border: 2px solid #e9ecef;
-            border-radius: 10px;
-            padding: 10px 15px 10px 45px;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-            background: #f8f9fa;
-        }
-
-        .form-control:focus {
-            border-color: #6B73FF;
-            box-shadow: 0 0 0 0.2rem rgba(107, 115, 255, 0.25);
-            background: white;
-        }
-
-        .btn-login {
-            height: 50px;
-            background: linear-gradient(135deg, #6B73FF 0%, #000DFF 100%);
-            border: none;
-            border-radius: 10px;
-            font-weight: 500;
-            letter-spacing: 1px;
-            transition: all 0.3s ease;
-            margin-top: 10px;
-        }
-
-        .btn-login:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(107, 115, 255, 0.4);
-        }
-
-        .links {
-            text-align: center;
-            margin-top: 25px;
-            display: flex;
-            justify-content: center;
-            gap: 30px;
-        }
-
-        .links a {
-            color: #6B73FF;
-            text-decoration: none;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .links a i {
-            font-size: 0.9em;
-        }
-
-        .links a:hover {
-            color: #000DFF;
-            transform: translateY(-1px);
-        }
-
-        @media (max-width: 768px) {
-            .login-banner {
-                display: none;
-            }
-            
-            .container {
-                padding: 0 20px;
-            }
-            
-            .login-form {
-                padding: 30px;
-            }
-        }
-    </style>
+    <title>登录 - 瑞瑞和华华</title>
+    <link href="css/common.css" rel="stylesheet">
+    <link href="css/login.css" rel="stylesheet">
 </head>
 <body>
     <div class="container">
         <div class="login-wrapper">
             <div class="login-banner">
                 <h1>欢迎回来</h1>
-                <p>在这里，记录每一个值得纪念的日子。</p>
-                <p>让我们一起珍藏美好时光。</p>
+                <p>记录每一个值得纪念的日子</p>
+                <p>让我们一起珍藏美好时光</p>
             </div>
             <div class="login-form">
                 <h2 class="form-title">账号登录</h2>
                 <form id="loginForm">
-                    <div class="mb-3">
-                        <label for="email" class="form-label">邮箱</label>
-                        <div class="input-group">
-                            <i class="fas fa-envelope"></i>
-                            <input type="email" class="form-control" id="email" 
-                                   placeholder="请输入邮箱"
-                                   autocomplete="username" required>
-                        </div>
+                    <div class="form-group">
+                        <label for="email">邮箱</label>
+                        <input type="email" id="email" name="email" required>
                     </div>
-                    <div class="mb-3">
-                        <label for="password" class="form-label">密码</label>
-                        <div class="input-group">
-                            <i class="fas fa-lock"></i>
-                            <input type="password" class="form-control" id="password" 
-                                   placeholder="请输入密码"
-                                   autocomplete="current-password" required>
-                        </div>
-                        <div class="text-end mt-2">
-                            <a href="forgot-password.html" class="text-primary text-decoration-none">忘记密码？</a>
-                        </div>
+
+                    <div class="form-group">
+                        <label for="password">密码</label>
+                        <input type="password" id="password" name="password" required>
                     </div>
-                    <button type="submit" class="btn btn-login w-100">登录</button>
-                    <div class="links">
-                        <a href="register.html">
-                            <i class="fas fa-user-plus"></i>
-                            注册账号
-                        </a>
+
+                    <div class="form-group privacy-check">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="privacyCheckbox" required>
+                            <span>我已阅读并同意<a href="privacy-policy.html" target="_blank">隐私政策</a></span>
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn-submit" id="loginButton" disabled>登录</button>
+
+                    <div class="form-links">
+                        <a href="forgot-password.html">忘记密码？</a>
+                        <a href="register.html">注册账号</a>
+                        <a href="change-email.html">更换邮箱</a>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 
+    <!-- 基础配置和通用功能 -->
     <script>
-        // 确保 app 对象存在
+        // 先定义全局对象
         window.app = {
-            apiBaseUrl: 'http://localhost:3030/api'
+            apiBaseUrl: 'http://localhost:3000/api',
+            auth: {
+                getToken() {
+                    return localStorage.getItem('token');
+                },
+                setToken(token) {
+                    localStorage.setItem('token', token);
+                },
+                getUserInfo() {
+                    const info = localStorage.getItem('userInfo');
+                    return info ? JSON.parse(info) : null;
+                },
+                setUserInfo(info) {
+                    localStorage.setItem('userInfo', JSON.stringify(info));
+                },
+                clear() {
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('userInfo');
+                },
+                getAuthHeaders() {
+                    const token = this.getToken();
+                    return token ? {
+                        'Authorization': `Bearer ${token}`
+                    } : {};
+                },
+                isAuthenticated() {
+                    const token = this.getToken();
+                    const userInfo = this.getUserInfo();
+                    return !!(token && userInfo);
+                },
+                showAlert(options) {
+                    const { type = 'info', title, message, onConfirm } = options;
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = `alert-modal ${type}`;
+                    alertDiv.innerHTML = `
+                        <div class="alert-content">
+                            <h3>${title}</h3>
+                            <p>${message}</p>
+                            <button class="alert-button">确定</button>
+                        </div>
+                    `;
+                    document.body.appendChild(alertDiv);
+                    
+                    const button = alertDiv.querySelector('button');
+                    button.onclick = () => {
+                        alertDiv.remove();
+                        if (onConfirm) onConfirm();
+                    };
+                }
+            }
         };
     </script>
+    <script src="js/common.js"></script>
     <script src="js/login.js"></script>
 </body>
 </html>

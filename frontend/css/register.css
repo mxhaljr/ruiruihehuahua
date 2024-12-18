@@ -1,0 +1,260 @@
+body {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 0;
+}
+
+.container {
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.register-wrapper {
+    display: flex;
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+}
+
+.register-banner {
+    flex: 1;
+    background: linear-gradient(135deg, #6B73FF 0%, #000DFF 100%);
+    padding: 40px;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+}
+
+.register-banner::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('https://api.iconify.design/material-symbols/person-outline.svg?color=white') no-repeat center center;
+    background-size: 200px;
+    opacity: 0.1;
+}
+
+.register-banner h1 {
+    font-size: 2.5em;
+    font-weight: 700;
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.register-banner p {
+    font-size: 1.1em;
+    opacity: 0.9;
+    line-height: 1.8;
+    position: relative;
+}
+
+.register-form {
+    flex: 1;
+    padding: 40px 50px;
+    background: white;
+}
+
+.form-title {
+    color: #2c3e50;
+    font-weight: 600;
+    margin-bottom: 30px;
+    text-align: center;
+    font-size: 1.8em;
+    position: relative;
+}
+
+.form-title::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 50px;
+    height: 3px;
+    background: linear-gradient(to right, #6B73FF, #000DFF);
+    border-radius: 3px;
+}
+
+.form-control {
+    width: 100%;
+    height: 48px;
+    border: 2px solid #e9ecef;
+    border-radius: 10px;
+    padding: 10px 15px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.form-control:focus {
+    border-color: #6B73FF;
+    box-shadow: 0 0 0 0.2rem rgba(107, 115, 255, 0.25);
+}
+
+.verification-code {
+    display: flex;
+    gap: 12px;
+    margin-left: 0;
+}
+
+.verification-code input {
+    flex: 1;
+}
+
+#sendCode {
+    min-width: 120px;
+    height: 48px;
+    border-radius: 10px;
+    background: #6B73FF;
+    border: none;
+    color: white;
+    transition: all 0.3s ease;
+    margin-left: auto;
+}
+
+#sendCode:hover:not(:disabled) {
+    background: #000DFF;
+    transform: translateY(-2px);
+}
+
+#sendCode:disabled {
+    background: #a0a0a0;
+}
+
+.btn-primary {
+    width: 100%;
+    height: 48px;
+    margin-top: 30px;
+    background: linear-gradient(135deg, #6B73FF 0%, #000DFF 100%);
+    border: none;
+    border-radius: 10px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(107, 115, 255, 0.4);
+}
+
+.mt-3 a {
+    color: #6B73FF;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.mt-3 a:hover {
+    color: #000DFF;
+    transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+    .register-banner {
+        display: none;
+    }
+    
+    .container {
+        padding: 0 20px;
+    }
+    
+    .register-form {
+        padding: 30px;
+    }
+
+    .form-label {
+        position: static;
+        left: 0;
+        transform: none;
+        text-align: left;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .verification-code {
+        margin-left: 0;
+    }
+} 
+
+/* 密码强度提示样式 */
+.password-strength {
+    margin-top: 8px;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.strength-bar {
+    height: 4px;
+    background: #e9ecef;
+    border-radius: 2px;
+    overflow: hidden;
+    margin: 8px 0;
+}
+
+.strength-meter {
+    height: 100%;
+    width: 0;
+    transition: all 0.3s ease;
+    border-radius: 2px;
+}
+
+.strength-meter.weak {
+    background: #dc3545;
+    width: 25%;
+}
+
+.strength-meter.medium {
+    background: #ffc107;
+    width: 75%;
+}
+
+.strength-meter.strong {
+    background: #28a745;
+    width: 100%;
+}
+
+.strength-text {
+    font-size: 14px;
+    margin-left: 8px;
+    font-weight: 500;
+}
+
+.strength-text.weak {
+    color: #dc3545;
+}
+
+.strength-text.medium {
+    color: #ffc107;
+}
+
+.strength-text.strong {
+    color: #28a745;
+}
+
+#strengthTips {
+    font-size: 13px;
+    color: #666;
+    margin-top: 6px;
+    line-height: 1.4;
+}
+
+.d-flex {
+    display: flex;
+}
+
+.align-items-center {
+    align-items: center;
+} 

@@ -1,389 +1,466 @@
+const API_BASE_URL = window.app.apiBaseUrl;
+
 class AnniversaryManager {
     constructor() {
-        this.form = document.getElementById('anniversaryForm');
-        this.listContainer = document.getElementById('anniversaryList');
-        this.modal = new bootstrap.Modal(document.getElementById('anniversaryModal'));
-        this.saveButton = document.getElementById('saveButton');
-        this.currentEditId = null;
-        this.initEventListeners();
-        this.loadAnniversaries();
+        this.initPage();
+        this.allData = [];
     }
 
-    initEventListeners() {
-        this.saveButton.addEventListener('click', () => this.handleSave());
-        
-        document.querySelectorAll('.sidebar-item').forEach(item => {
-            item.addEventListener('click', (e) => {
-                const action = e.currentTarget.getAttribute('data-action');
-                switch(action) {
-                    case 'all':
-                        this.showAllAnniversaries();
-                        break;
-                    case 'upcoming':
-                        this.showUpcomingAnniversaries();
-                        break;
-                    case 'month':
-                        this.showMonthAnniversaries();
-                        break;
-                }
-            });
-        });
-    }
-
-    async loadAnniversaries() {
-        try {
-            const response = await fetch(`${window.app.apiBaseUrl}/anniversaries`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
-            });
-            
-            if (!response.ok) throw new Error('获取纪念日列表失败');
-            
-            const anniversaries = await response.json();
-            console.log('加载的纪念日数据:', anniversaries);
-            
-            this.updateCounts(anniversaries);
-            this.renderAnniversaryList(anniversaries);
-            return anniversaries;
-        } catch (error) {
-            console.error('加载纪念日列表失败:', error);
-            alert('加载纪念日列表失败');
-        }
-    }
-
-    renderAnniversaryList(anniversaries) {
-        this.listContainer.innerHTML = anniversaries.map(anniversary => `
-            <div class="col-12 mb-3">
-                <div class="card h-100 border-0 shadow-sm">
-                    <div class="card-body p-0">
-                        <div class="d-flex align-items-center p-3 border-bottom">
-                            <div class="flex-grow-1">
-                                <div class="d-flex align-items-center">
-                                    <h5 class="mb-0 fw-bold">${this.decrypt(anniversary.title)}</h5>
-                                    ${anniversary.important ? '<i class="fas fa-star text-warning ms-2"></i>' : ''}
-                                </div>
-                                <small class="text-muted">
-                                    ${new Date(anniversary.date).toLocaleDateString()}
-                                    <span class="badge ms-2 bg-${this.getTypeColor(anniversary.type)}">
-                                        ${this.getTypeText(anniversary.type)}
-                                    </span>
-                                </small>
+    initPage() {
+        document.querySelector('.btn-add').addEventListener('click', () => {
+            const modal = document.createElement('dialog');
+            modal.className = 'modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>添加纪念日</h3>
+                        <button class="close-btn" onclick="this.closest('dialog').close()">×</button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="anniversaryForm">
+                            <div class="form-group">
+                                <label>标题</label>
+                                <input type="text" name="title" required>
                             </div>
-                            <div class="d-flex gap-2">
-                                <button class="btn btn-icon" onclick="anniversaryManager.editAnniversary(${anniversary.id})">
-                                    <i class="fas fa-edit text-primary"></i>
-                                </button>
-                                <button class="btn btn-icon" onclick="anniversaryManager.deleteAnniversary(${anniversary.id})">
-                                    <i class="fas fa-trash-alt text-danger"></i>
-                                </button>
+                            <div class="form-group">
+                                <label>日期</label>
+                                <input type="date" name="date" required>
                             </div>
-                        </div>
-                        <div class="px-3 py-2 bg-light">
-                            <div class="row g-2">
-                                <div class="col-auto">
-                                    <div class="d-flex align-items-center">
-                                        <i class="fas fa-bell me-2 text-warning"></i>
-                                        <span class="badge bg-light text-dark border">
-                                            ${this.getReminderText(anniversary.reminder_days)}
-                                        </span>
-                                    </div>
-                                </div>
-                                ${anniversary.description ? `
-                                    <div class="col">
-                                        <div class="d-flex align-items-center">
-                                            <i class="fas fa-comment-alt me-2 text-info"></i>
-                                            <span class="text-muted">${this.decrypt(anniversary.description)}</span>
-                                        </div>
-                                    </div>
-                                ` : ''}
+                            <div class="form-group">
+                                <label>类型</label>
+                                <select name="type">
+                                    <option value="love">恋���纪念</option>
+                                    <option value="wedding">结婚纪念</option>
+                                    <option value="work">工作纪念</option>
+                                    <option value="other">其他纪念</option>
+                                </select>
                             </div>
-                        </div>
+                            <div class="form-group">
+                                <label>提醒设置</label>
+                                <select name="reminder_days">
+                                    <option value="0">当天提醒</option>
+                                    <option value="1">提前1天</option>
+                                    <option value="3">提前3天</option>
+                                    <option value="7">提前7天</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>备注</label>
+                                <textarea name="description" rows="3" placeholder="添加一些备注信息..."></textarea>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn-cancel">取消</button>
+                        <button class="btn-save">保存</button>
                     </div>
                 </div>
-            </div>
-        `).join('');
-    }
-
-    getTypeColor(type) {
-        const colors = {
-            'love': 'danger',
-            'wedding': 'primary',
-            'work': 'success',
-            'other': 'info'
-        };
-        return colors[type] || 'info';
-    }
-
-    getTypeText(type) {
-        const texts = {
-            'love': '恋爱纪念',
-            'wedding': '结婚纪念',
-            'work': '工作纪念',
-            'other': '其他纪念'
-        };
-        return texts[type] || '其他纪念';
-    }
-
-    getReminderText(days) {
-        switch(parseInt(days)) {
-            case 0: return '当天提醒';
-            case 1: return '提前1天';
-            case 2: return '提前2天';
-            case 3: return '提前3天';
-            case 7: return '提前7天';
-            default: return '当天提醒';
-        }
-    }
-
-    // 加密函数
-    encrypt(text) {
-        // 使用与birthday.js相同的加密方法
-        const base64 = btoa(unescape(encodeURIComponent(text)));
-        return base64.split('').map(char => {
-            const mapping = {
-                'A': 'P', 'B': 'Q', 'C': 'R', 'D': 'S', 'E': 'T',
-                'F': 'U', 'G': 'V', 'H': 'W', 'I': 'X', 'J': 'Y',
-                'K': 'Z', 'L': 'A', 'M': 'B', 'N': 'C', 'O': 'D',
-                'P': 'E', 'Q': 'F', 'R': 'G', 'S': 'H', 'T': 'I',
-                'U': 'J', 'V': 'K', 'W': 'L', 'X': 'M', 'Y': 'N',
-                'Z': 'O', 'a': 'p', 'b': 'q', 'c': 'r', 'd': 's',
-                'e': 't', 'f': 'u', 'g': 'v', 'h': 'w', 'i': 'x',
-                'j': 'y', 'k': 'z', 'l': 'a', 'm': 'b', 'n': 'c',
-                'o': 'd', 'p': 'e', 'q': 'f', 'r': 'g', 's': 'h',
-                't': 'i', 'u': 'j', 'v': 'k', 'w': 'l', 'x': 'm',
-                'y': 'n', 'z': 'o', '0': '5', '1': '6', '2': '7',
-                '3': '8', '4': '9', '5': '0', '6': '1', '7': '2',
-                '8': '3', '9': '4', '+': '-', '/': '_', '=': '.'
-            };
-            return mapping[char] || char;
-        }).join('');
-    }
-
-    // 解密函数
-    decrypt(text) {
-        if (!text) return '';
-        
-        const reverseMapping = {
-            'P': 'A', 'Q': 'B', 'R': 'C', 'S': 'D', 'T': 'E',
-            'U': 'F', 'V': 'G', 'W': 'H', 'X': 'I', 'Y': 'J',
-            'Z': 'K', 'A': 'L', 'B': 'M', 'C': 'N', 'D': 'O',
-            'E': 'P', 'F': 'Q', 'G': 'R', 'H': 'S', 'I': 'T',
-            'J': 'U', 'K': 'V', 'L': 'W', 'M': 'X', 'N': 'Y',
-            'O': 'Z', 'p': 'a', 'q': 'b', 'r': 'c', 's': 'd',
-            't': 'e', 'u': 'f', 'v': 'g', 'w': 'h', 'x': 'i',
-            'y': 'j', 'z': 'k', 'a': 'l', 'b': 'm', 'c': 'n',
-            'd': 'o', 'e': 'p', 'f': 'q', 'g': 'r', 'h': 's',
-            'i': 't', 'j': 'u', 'k': 'v', 'l': 'w', 'm': 'x',
-            'n': 'y', 'o': 'z', '5': '0', '6': '1', '7': '2',
-            '8': '3', '9': '4', '0': '5', '1': '6', '2': '7',
-            '3': '8', '4': '9', '-': '+', '_': '/', '.': '='
-        };
-
-        const base64 = text.split('').map(char => reverseMapping[char] || char).join('');
-        try {
-            return decodeURIComponent(escape(atob(base64)));
-        } catch (e) {
-            console.error('解密失败:', e);
-            return text;
-        }
-    }
-
-    async handleSave() {
-        const title = document.getElementById('title').value.trim();
-        const date = document.getElementById('date').value;
-        const type = document.getElementById('type').value;
-        const description = document.getElementById('description').value.trim();
-        const reminder_days = parseInt(document.getElementById('reminder_days').value);
-        const important = document.getElementById('important').checked ? 1 : 0;
-
-        if (!title || !date) {
-            alert('请填写必填字段');
-            return;
-        }
-
-        const anniversaryData = {
-            title: this.encrypt(title),
-            date,
-            type,
-            description: description ? this.encrypt(description) : '',
-            reminder_days,
-            important
-        };
-
-        try {
-            if (this.currentEditId) {
-                await this.updateAnniversary(this.currentEditId, anniversaryData);
-            } else {
-                await this.createAnniversary(anniversaryData);
-            }
+            `;
             
-            this.modal.hide();
-            this.form.reset();
-            this.currentEditId = null;
-            await this.loadAnniversaries();
-        } catch (error) {
-            console.error('保存失败:', error);
-            alert('保存失败');
-        }
-    }
-
-    async createAnniversary(anniversaryData) {
-        const response = await fetch(`${window.app.apiBaseUrl}/anniversaries`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            },
-            body: JSON.stringify(anniversaryData)
+            document.body.appendChild(modal);
+            
+            modal.querySelector('.btn-cancel').addEventListener('click', () => modal.close());
+            modal.querySelector('.btn-save').addEventListener('click', () => this.saveAnniversary());
+            
+            modal.showModal();
         });
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || '添加纪念日失败');
+        document.querySelectorAll('.sidebar-item').forEach((item, index) => {
+            item.onclick = () => {
+                this.setActiveTab(index);
+                if (index === 0) this.loadAll();
+                else if (index === 1) this.loadUpcoming();
+                else if (index === 2) this.loadMonthly();
+            };
+        });
+
+        this.loadAll();
+    }
+
+    setActiveTab(index) {
+        document.querySelectorAll('.sidebar-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        document.querySelectorAll('.sidebar-item')[index].classList.add('active');
+    }
+
+    async loadAll() {
+        try {
+            const response = await fetch(`${API_BASE_URL}/anniversaries`, {
+                headers: {
+                    ...window.app.auth.getAuthHeaders()
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error('获取纪念日列表失败');
+            }
+
+            this.allData = await response.json();
+            
+            this.updateCounts(this.allData);
+            this.renderList(this.allData);
+        } catch (error) {
+            this.showToast('加载失败，请重试', 'error');
         }
-        alert('添加成功！');
+    }
+
+    loadUpcoming() {
+        const now = new Date();
+        const upcoming = this.allData.filter(item => {
+            const date = new Date(item.date);
+            const diff = Math.ceil((date - now) / (1000 * 60 * 60 * 24));
+            return diff >= 0 && diff <= 3;
+        });
+        
+        this.renderList(upcoming);
+    }
+
+    loadMonthly() {
+        const currentMonth = new Date().getMonth() + 1;
+        const monthly = this.allData.filter(item => {
+            const date = new Date(item.date);
+            return date.getMonth() + 1 === currentMonth;
+        });
+        
+        this.renderList(monthly);
+    }
+
+    updateCounts(data) {
+        const counts = document.querySelectorAll('.sidebar-item span:last-child');
+        counts[0].textContent = data.length || 0;
+        
+        const upcoming = data.filter(item => {
+            const date = new Date(item.date);
+            const now = new Date();
+            const diff = Math.ceil((date - now) / (1000 * 60 * 60 * 24));
+            return diff >= 0 && diff <= 3;
+        });
+        counts[1].textContent = upcoming.length;
+
+        const currentMonth = new Date().getMonth() + 1;
+        const monthly = data.filter(item => {
+            const date = new Date(item.date);
+            return date.getMonth() + 1 === currentMonth;
+        });
+        counts[2].textContent = monthly.length;
+    }
+
+    renderList(data) {
+        const anniversaryList = document.querySelector('.anniversary-list');
+        
+        anniversaryList.innerHTML = '';
+        
+        if (!Array.isArray(data) || data.length === 0) {
+            anniversaryList.innerHTML = `
+                <div class="empty-state">
+                    <h3>还没有加任何纪念日</h3>
+                    <p>点击右上角的"添加纪念日"开始添加吧！</p>
+                </div>
+            `;
+            return;
+        }
+        
+        const typeMap = {
+            love: '恋爱纪念',
+            wedding: '结婚纪念',
+            work: '工作纪念',
+            other: '其他纪念'
+        };
+
+        const html = data.map(item => {
+            const decryptedItem = this.decryptData(item);
+            
+            return `
+                <div class="anniversary-item" data-id="${item.id}" data-type="${item.type}">
+                    <div class="anniversary-info">
+                        <div class="anniversary-date">${new Date(item.date).toLocaleDateString()}</div>
+                        <div class="anniversary-type" data-type="${item.type}">${typeMap[item.type]}</div>
+                        <div class="anniversary-title">${decryptedItem.title}</div>
+                        <div class="anniversary-reminder">提前${item.reminder_days}天提醒</div>
+                        ${decryptedItem.description ? `<div class="anniversary-desc">${decryptedItem.description}</div>` : ''}
+                    </div>
+                    <div class="anniversary-actions">
+                        <button class="btn-edit" onclick="anniversaryManager.editAnniversary('${item.id}')">✏️</button>
+                        <button class="btn-delete" onclick="anniversaryManager.deleteAnniversary('${item.id}')">🗑️</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        anniversaryList.innerHTML = html;
+        this.updateCounts(data);
     }
 
     async deleteAnniversary(id) {
-        if (!confirm('确定要删除这条纪念日信息吗？')) return;
-
+        const confirmed = await this.showConfirm('确定要删除这个纪念日吗？');
+        if (!confirmed) return;
+        
+        const item = document.querySelector(`[data-id="${id}"]`);
+        if (!item) return;
+        
         try {
-            const response = await fetch(`${window.app.apiBaseUrl}/anniversaries/${id}`, {
+            const response = await fetch(`${API_BASE_URL}/anniversaries/${id}`, {
                 method: 'DELETE',
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    ...window.app.auth.getAuthHeaders()
                 }
             });
-
-            if (!response.ok) throw new Error('删除失败');
             
-            this.loadAnniversaries();
-            alert('删除成功！');
+            if (!response.ok) throw new Error('删除失败');
+
+            item.classList.add('deleting');
+            
+            setTimeout(() => {
+                item.remove();
+                const data = Array.from(document.querySelectorAll('.anniversary-item')).map(item => ({
+                    date: new Date(item.querySelector('.anniversary-date').textContent),
+                    reminder_days: parseInt(item.querySelector('.anniversary-reminder').textContent.match(/\d+/)[0])
+                }));
+                this.updateCounts(data);
+                this.showToast('删除成功');
+            }, 300);
         } catch (error) {
-            console.error('删除失败:', error);
-            alert('删除失败');
+            this.showToast('删除失败，请重试', 'error');
+            item.classList.remove('deleting');
+        }
+    }
+
+    encryptData(data) {
+        const encryptedData = {};
+        const sensitiveFields = ['title', 'description'];
+        
+        for (let key in data) {
+            if (sensitiveFields.includes(key)) {
+                encryptedData[key] = CryptoJS.AES.encrypt(
+                    data[key] || '', 
+                    window.app.encryptKey
+                ).toString();
+            } else {
+                encryptedData[key] = data[key];
+            }
+        }
+        return encryptedData;
+    }
+
+    async saveAnniversary() {
+        const form = document.getElementById('anniversaryForm');
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData);
+
+        try {
+            const encryptedData = this.encryptData(data);
+
+            const response = await fetch(`${API_BASE_URL}/anniversaries`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...window.app.auth.getAuthHeaders()
+                },
+                body: JSON.stringify(encryptedData)
+            });
+
+            if (!response.ok) throw new Error('保存失败');
+
+            form.closest('dialog').close();
+            this.loadAll();
+            this.showToast('添加成功');
+        } catch (error) {
+            this.showToast('保存失败，请重试', 'error');
         }
     }
 
     async editAnniversary(id) {
-        try {
-            const response = await fetch(`${window.app.apiBaseUrl}/anniversaries/${id}`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
-            });
-            
-            if (!response.ok) throw new Error('获取纪念日信息失败');
-            
-            const anniversary = await response.json();
-            
-            document.getElementById('title').value = this.decrypt(anniversary.title);
-            document.getElementById('date').value = anniversary.date.split('T')[0];
-            document.getElementById('type').value = anniversary.type;
-            document.getElementById('description').value = anniversary.description ? this.decrypt(anniversary.description) : '';
-            document.getElementById('reminder_days').value = anniversary.reminder_days;
-            document.getElementById('important').checked = anniversary.important === 1;
-            
-            this.currentEditId = id;
-            document.getElementById('modalTitle').textContent = '编辑纪念日';
-            this.modal.show();
-        } catch (error) {
-            console.error('编辑失败:', error);
-            alert('获取纪念日信息失败');
-        }
-    }
+        const item = document.querySelector(`[data-id="${id}"]`);
+        if (!item) return;
 
-    async updateAnniversary(id, anniversaryData) {
-        const response = await fetch(`${window.app.apiBaseUrl}/anniversaries/${id}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            },
-            body: JSON.stringify(anniversaryData)
+        const data = this.decryptData({
+            title: item.querySelector('.anniversary-title').textContent,
+            date: new Date(item.querySelector('.anniversary-date').textContent).toISOString().split('T')[0],
+            type: item.dataset.type,
+            reminder_days: parseInt(item.querySelector('.anniversary-reminder').textContent.match(/\d+/)[0]),
+            description: item.querySelector('.anniversary-desc')?.textContent || ''
         });
 
-        if (!response.ok) throw new Error('更新失败');
-        alert('更新成功！');
+        const modal = document.createElement('dialog');
+        modal.className = 'modal edit-modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>编辑纪念日</h3>
+                    <button class="close-btn" onclick="this.closest('dialog').close()">×</button>
+                </div>
+                <div class="modal-body">
+                    <form id="editAnniversaryForm">
+                        <div class="form-group">
+                            <label>标题</label>
+                            <input type="text" name="title" value="${data.title}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>日期</label>
+                            <input type="date" name="date" value="${data.date}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>类型</label>
+                            <select name="type">
+                                <option value="love" ${data.type === 'love' ? 'selected' : ''}>恋爱纪念</option>
+                                <option value="wedding" ${data.type === 'wedding' ? 'selected' : ''}>结婚纪念</option>
+                                <option value="work" ${data.type === 'work' ? 'selected' : ''}>工作纪念</option>
+                                <option value="other" ${data.type === 'other' ? 'selected' : ''}>其他纪念</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>提醒设置</label>
+                            <select name="reminder_days">
+                                <option value="0" ${data.reminder_days === 0 ? 'selected' : ''}>当天提醒</option>
+                                <option value="1" ${data.reminder_days === 1 ? 'selected' : ''}>提前1天</option>
+                                <option value="3" ${data.reminder_days === 3 ? 'selected' : ''}>提前3天</option>
+                                <option value="7" ${data.reminder_days === 7 ? 'selected' : ''}>提前7天</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>备注</label>
+                            <textarea name="description" rows="3" placeholder="添加一些备注信息...">${data.description}</textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-cancel" onclick="this.closest('dialog').close()">取消</button>
+                    <button class="btn-save" onclick="anniversaryManager.updateAnniversary('${id}')">保存</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        modal.showModal();
     }
 
-    async showAllAnniversaries() {
-        this.setActiveTab('total');
-        await this.loadAnniversaries();
-    }
+    async updateAnniversary(id) {
+        const form = document.getElementById('editAnniversaryForm');
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData);
 
-    async showUpcomingAnniversaries() {
-        this.setActiveTab('upcoming');
         try {
-            const response = await fetch(`${window.app.apiBaseUrl}/anniversaries/upcoming/30`, {
+            const encryptedData = this.encryptData(data);
+
+            const response = await fetch(`${API_BASE_URL}/anniversaries/${id}`, {
+                method: 'PUT',
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
+                    'Content-Type': 'application/json',
+                    ...window.app.auth.getAuthHeaders()
+                },
+                body: JSON.stringify(encryptedData)
             });
-            if (!response.ok) throw new Error('获取即将到来的纪念日失败');
+
+            if (!response.ok) throw new Error('更新失败');
+
+            const item = document.querySelector(`[data-id="${id}"]`);
+            if (!item) throw new Error('找不到要更新的纪念日');
+
+            const typeMap = {
+                love: '恋爱纪念',
+                wedding: '结婚纪念',
+                work: '工作纪念',
+                other: '其他纪念'
+            };
+
+            item.dataset.type = data.type;
+            item.querySelector('.anniversary-date').textContent = new Date(data.date).toLocaleDateString();
+            item.querySelector('.anniversary-type').textContent = typeMap[data.type];
+            item.querySelector('.anniversary-title').textContent = data.title;
+            item.querySelector('.anniversary-reminder').textContent = `提前${data.reminder_days}天提醒`;
             
-            const anniversaries = await response.json();
-            this.renderAnniversaryList(anniversaries);
+            const descEl = item.querySelector('.anniversary-desc');
+            if (data.description) {
+                if (descEl) {
+                    descEl.textContent = data.description;
+                } else {
+                    const newDescEl = document.createElement('div');
+                    newDescEl.className = 'anniversary-desc';
+                    newDescEl.textContent = data.description;
+                    item.querySelector('.anniversary-info').appendChild(newDescEl);
+                }
+            } else if (descEl) {
+                descEl.remove();
+            }
+
+            form.closest('dialog').close();
+            this.showToast('更新成功');
         } catch (error) {
-            console.error('加载即将到来的纪念日失败:', error);
+            this.showToast('更新失败，请重试', 'error');
         }
     }
 
-    async showMonthAnniversaries() {
-        this.setActiveTab('month');
-        try {
-            const currentMonth = new Date().getMonth() + 1;
-            const response = await fetch(`${window.app.apiBaseUrl}/anniversaries/month/${currentMonth}`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
-            });
-            if (!response.ok) throw new Error('获取当月纪念日失败');
-            
-            const anniversaries = await response.json();
-            this.renderAnniversaryList(anniversaries);
-        } catch (error) {
-            console.error('加载当月纪念日失败:', error);
-        }
-    }
+    showToast(message, type = 'success') {
+        document.querySelectorAll('.toast').forEach(t => t.remove());
 
-    setActiveTab(tab) {
-        document.querySelectorAll('.sidebar-item').forEach(item => {
-            item.classList.remove('active');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+
+        requestAnimationFrame(() => {
+            toast.classList.add('show');
         });
-        const tabMap = {
-            'total': 0,
-            'upcoming': 1,
-            'month': 2
-        };
-        document.querySelectorAll('.sidebar-item')[tabMap[tab]].classList.add('active');
+
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 300);
+        }, 2000);
     }
 
-    updateCounts(anniversaries) {
-        const today = new Date();
-        const currentMonth = today.getMonth() + 1;
-        
-        document.getElementById('totalCount').textContent = anniversaries.length;
-        
-        const upcomingCount = anniversaries.filter(anniversary => {
-            const diff = this.getDateDiff(today, new Date(anniversary.date));
-            return diff <= 30 && diff >= 0;
-        }).length;
-        document.getElementById('upcomingCount').textContent = upcomingCount;
-        
-        const monthCount = anniversaries.filter(anniversary => {
-            return new Date(anniversary.date).getMonth() + 1 === currentMonth;
-        }).length;
-        document.getElementById('monthCount').textContent = monthCount;
+    showConfirm(message) {
+        return new Promise((resolve) => {
+            const confirmBox = document.createElement('div');
+            confirmBox.className = 'confirm-box';
+            confirmBox.innerHTML = `
+                <div class="confirm-content">
+                    <p>${message}</p>
+                    <div class="confirm-buttons">
+                        <button class="btn-cancel">取消</button>
+                        <button class="btn-confirm">确定</button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(confirmBox);
+            setTimeout(() => confirmBox.classList.add('show'), 10);
+
+            const cancelBtn = confirmBox.querySelector('.btn-cancel');
+            const confirmBtn = confirmBox.querySelector('.btn-confirm');
+
+            const cleanup = (result) => {
+                confirmBox.classList.remove('show');
+                setTimeout(() => confirmBox.remove(), 300);
+                resolve(result);
+            };
+
+            cancelBtn.onclick = () => cleanup(false);
+            confirmBtn.onclick = () => cleanup(true);
+        });
     }
 
-    getDateDiff(date1, date2) {
-        const oneDay = 24 * 60 * 60 * 1000;
-        return Math.round((date2 - date1) / oneDay);
+    decryptData(data) {
+        const decryptedData = {...data};
+        const sensitiveFields = ['title', 'description'];
+        
+        for (let key of sensitiveFields) {
+            if (data[key]) {
+                try {
+                    const bytes = CryptoJS.AES.decrypt(data[key], window.app.encryptKey);
+                    decryptedData[key] = bytes.toString(CryptoJS.enc.Utf8);
+                } catch {
+                    decryptedData[key] = data[key];
+                }
+            }
+        }
+        return decryptedData;
     }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    if (!window.app.checkPageAuth()) {
+        return;
+    }
     window.anniversaryManager = new AnniversaryManager();
 }); 

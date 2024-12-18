@@ -3,379 +3,251 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>账号注销 - 生日提醒网站</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.0.0/css/all.min.css" rel="stylesheet">
+    <title>注销账号</title>
+    <link href="css/style.css" rel="stylesheet">
+    <link href="css/login.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <style>
-        body {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 40px 0;
-        }
-
-        .delete-container {
-            width: 100%;
-            max-width: 1000px;
-            margin: 0 auto;
-        }
-
-        .delete-wrapper {
+        .login-wrapper {
+            width: 900px;
             background: white;
-            border-radius: 20px;
+            border-radius: 24px;
             overflow: hidden;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
             display: flex;
         }
 
-        .delete-banner {
+        .login-banner {
             flex: 1;
-            background: linear-gradient(135deg, #dc3545 0%, #b02a37 100%);
-            padding: 40px;
+            background: #dc3545;
             color: white;
+            padding: 40px;
             display: flex;
             flex-direction: column;
             justify-content: center;
             position: relative;
+            overflow: hidden;
         }
 
-        .delete-banner::before {
+        .login-banner::before {
             content: '';
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: url('https://api.iconify.design/clarity/warning-standard-line.svg?color=white') no-repeat center center;
-            background-size: 200px;
-            opacity: 0.1;
+            background: linear-gradient(45deg, rgba(220, 53, 69, 0.8), rgba(201, 42, 57, 0.8));
+            z-index: 1;
         }
 
-        .delete-banner h1 {
-            font-size: 2.5em;
-            font-weight: 700;
-            margin-bottom: 20px;
+        .login-banner > * {
             position: relative;
+            z-index: 2;
         }
 
-        .delete-banner p {
-            font-size: 1.1em;
-            opacity: 0.9;
-            line-height: 1.8;
-            position: relative;
-        }
-
-        .delete-form {
+        .login-form {
             flex: 1;
-            padding: 40px 50px;
-            background: white;
+            padding: 40px;
         }
 
-        .warning-title {
-            color: #dc3545;
-            font-weight: 600;
-            margin-bottom: 30px;
-            text-align: center;
-            font-size: 1.8em;
-            position: relative;
+        .form-group {
+            margin-bottom: 20px;
         }
 
-        .warning-title::after {
-            content: '';
-            position: absolute;
-            bottom: -10px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 50px;
-            height: 3px;
-            background: linear-gradient(to right, #dc3545, #b02a37);
-            border-radius: 3px;
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #4B5563;
+            font-weight: 500;
         }
 
-        .warning-text {
-            color: #666;
-            margin-bottom: 30px;
-            line-height: 1.8;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 10px;
-        }
-
-        .form-control {
-            height: 48px;
-            border: 2px solid #e9ecef;
-            border-radius: 10px;
-            padding: 10px 15px;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-        }
-
-        .form-control:focus {
-            border-color: #dc3545;
-            box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+        .form-group input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #D1D5DB;
+            border-radius: 6px;
+            font-size: 16px;
         }
 
         .verification-code {
             display: flex;
-            gap: 12px;
+            gap: 10px;
         }
 
         .verification-code input {
             flex: 1;
         }
 
-        #sendCode {
-            min-width: 120px;
-            height: 48px;
-            border-radius: 10px;
+        .verification-code button {
+            white-space: nowrap;
+            padding: 10px 15px;
             background: #6c757d;
-            border: none;
             color: white;
-            transition: all 0.3s ease;
-        }
-
-        #sendCode:hover:not(:disabled) {
-            background: #5c636a;
-            transform: translateY(-2px);
-        }
-
-        #sendCode:disabled {
-            background: #adb5bd;
-        }
-
-        .btn-group {
-            display: flex;
-            gap: 15px;
-            margin-top: 30px;
-        }
-
-        .btn {
-            flex: 1;
-            height: 48px;
-            border-radius: 10px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-
-        .btn-danger {
-            background: linear-gradient(135deg, #dc3545 0%, #b02a37 100%);
             border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.2s;
         }
 
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        .verification-code button:hover {
+            background: #5a6268;
         }
 
-        .form-check {
+        .verification-code button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 12px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-bottom: 20px;
+        }
+
+        .btn-submit:hover {
+            background: #c82333;
+        }
+
+        .btn-submit:disabled {
+            background: #e4606d;
+            cursor: not-allowed;
+        }
+
+        .confirm-group {
             margin: 20px 0;
+            text-align: center;
+            padding: 15px;
+            background: #fff5f5;
+            border-radius: 6px;
+            border: 1px solid #fecdd3;
         }
 
-        .form-check-input:checked {
-            background-color: #dc3545;
-            border-color: #dc3545;
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            user-select: none;
         }
 
-        @media (max-width: 768px) {
-            .delete-banner {
-                display: none;
-            }
-            
-            .delete-container {
-                padding: 0 20px;
-            }
-            
-            .delete-form {
-                padding: 30px;
-            }
+        .checkbox-label input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            margin: 0;
+            cursor: pointer;
+        }
+
+        .checkbox-label span {
+            color: #dc3545;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .form-links {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .form-links a {
+            color: #6c757d;
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.2s;
+        }
+
+        .form-links a:hover {
+            color: #5a6268;
+            text-decoration: underline;
         }
     </style>
 </head>
 <body>
-    <div class="delete-container">
-        <div class="delete-wrapper">
-            <div class="delete-banner">
+    <div class="container">
+        <div class="login-wrapper">
+            <div class="login-banner">
                 <h1>账号注销</h1>
                 <p>我们很遗憾看到您离开。</p>
-                <p>请确保您已经了解账号注销的所有后果。</p>
+                <p>请确保您已了解账号注销的所有后果。</p>
             </div>
-            <div class="delete-form">
-                <h2 class="warning-title">注销确认</h2>
-                <div class="warning-text">
-                    请注意以下事项：<br>
-                    1. 账号注销后，所有数据将被永久删除<br>
-                    2. 删除的数据无法恢复<br>
-                    3. 关联的邮箱可以重新注册新账号
-                </div>
+            <div class="login-form">
+                <h2 class="form-title">注销确认</h2>
+                <form id="deleteForm">
+                    <div class="form-group">
+                        <label for="email">邮箱</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
 
-                <form id="deleteAccountForm">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="confirmDelete" required>
-                        <label class="form-check-label" for="confirmDelete">
-                            我确认已经了解账号注销的所有后果
-                        </label>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">密码确认</label>
-                        <input type="password" class="form-control" id="password" 
-                               placeholder="请输入当前密码" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">邮箱验证</label>
+                    <div class="form-group">
+                        <label for="code">验证码</label>
                         <div class="verification-code">
-                            <input type="text" class="form-control" id="verificationCode" 
-                                   placeholder="请输入验证码" required>
-                            <button type="button" class="btn" id="sendCode">
-                                发送验证码
-                            </button>
+                            <input type="text" id="code" name="code" required maxlength="6">
+                            <button type="button" id="sendCode">获取验证码</button>
                         </div>
                     </div>
-                    <div class="btn-group">
-                        <a href="profile.html" class="btn btn-secondary">
-                            取消
-                        </a>
-                        <button type="submit" class="btn btn-danger" id="confirmDeleteBtn">
-                            确认注销
-                        </button>
+
+                    <button type="submit" class="btn-submit">确认注销</button>
+
+                    <div class="form-group confirm-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" required>
+                            <span>我确认已了解账号注销的所有后果</span>
+                        </label>
+                    </div>
+
+                    <div class="form-links">
+                        <a href="index.html">返回首页</a>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 
-    <script src="js/main.js"></script>
     <script>
-        // 确保 app 对象存在
-        if (typeof app === 'undefined') {
-            const app = {
-                apiBaseUrl: 'http://localhost:3000/api'  // 或者您的实际 API 地址
-            };
+    window.app = {
+        apiBaseUrl: 'http://localhost:3000/api',
+        auth: {
+            getToken() {
+                return localStorage.getItem('token');
+            },
+            setToken(token) {
+                localStorage.setItem('token', token);
+            },
+            getUserInfo() {
+                const info = localStorage.getItem('userInfo');
+                return info ? JSON.parse(info) : null;
+            },
+            setUserInfo(info) {
+                localStorage.setItem('userInfo', JSON.stringify(info));
+            },
+            clear() {
+                localStorage.removeItem('token');
+                localStorage.removeItem('userInfo');
+            },
+            getAuthHeaders() {
+                const token = this.getToken();
+                return token ? {
+                    'Authorization': `Bearer ${token}`
+                } : {};
+            },
+            isAuthenticated() {
+                const token = this.getToken();
+                const userInfo = this.getUserInfo();
+                return !!(token && userInfo);
+            }
         }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const form = document.getElementById('deleteAccountForm');
-            const sendCodeBtn = document.getElementById('sendCode');
-            const cancelBtn = document.querySelector('.btn-secondary');  // 添加取消按钮引用
-            let countdown = 0;
-            let timer = null;
-
-            // 添加取消按钮的点击事件处理
-            cancelBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                if (confirm('确定要取消注销操作吗？')) {
-                    window.location.href = 'profile.html';
-                }
-            });
-
-            // 发送验证码
-            sendCodeBtn.addEventListener('click', async () => {
-                try {
-                    const email = localStorage.getItem('email');
-                    if (!email) {
-                        alert('未找到用户邮箱');
-                        return;
-                    }
-
-                    // 禁用按钮，防止重复点击
-                    sendCodeBtn.disabled = true;
-                    sendCodeBtn.textContent = '发送中...';
-
-                    console.log('发送验证码请求:', {
-                        email,
-                        type: 'delete'
-                    });
-
-                    // 发送验证码请求
-                    const response = await fetch(`${app.apiBaseUrl}/auth/send-code`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ 
-                            email,
-                            type: 'delete'
-                        })
-                    });
-
-                    const data = await response.json();
-                    console.log('服务器响应:', data);
-                    
-                    if (!response.ok) {
-                        throw new Error(data.message || '发送验证码失败');
-                    }
-
-                    alert('验证码已发送到您的邮箱');
-                    
-                    // 开始倒计时
-                    countdown = 60;
-                    timer = setInterval(() => {
-                        sendCodeBtn.textContent = `${countdown}秒后重试`;
-                        countdown--;
-                        if (countdown < 0) {
-                            clearInterval(timer);
-                            sendCodeBtn.disabled = false;
-                            sendCodeBtn.textContent = '发送验证码';
-                        }
-                    }, 1000);
-
-                } catch (error) {
-                    console.error('发送验证码失败:', error);
-                    alert(error.message || '发送验证码失败，请检查控制台获取详细信息');
-                    sendCodeBtn.disabled = false;
-                    sendCodeBtn.textContent = '发送验证码';
-                }
-            });
-
-            // 注销账号
-            form.addEventListener('submit', async (e) => {
-                e.preventDefault();
-
-                if (!confirm('您确定要注销账号吗？此操作不可撤销！')) {
-                    return;
-                }
-
-                if (!document.getElementById('confirmDelete').checked) {
-                    alert('请确认您已了解账号注销的后果');
-                    return;
-                }
-
-                const password = document.getElementById('password').value;
-                const code = document.getElementById('verificationCode').value;
-                const email = localStorage.getItem('email');
-
-                try {
-                    // 直接发送注销请求
-                    const deleteResponse = await fetch(`${app.apiBaseUrl}/auth/delete-account`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${localStorage.getItem('token')}`
-                        },
-                        body: JSON.stringify({
-                            email,
-                            password,
-                            code,
-                            type: 'delete'
-                        })
-                    });
-
-                    const data = await deleteResponse.json();
-                    if (!deleteResponse.ok) {
-                        throw new Error(data.message || '注销账号失败');
-                    }
-
-                    alert('账号已成功注销');
-                    localStorage.clear();
-                    window.location.href = 'login.html';
-
-                } catch (error) {
-                    console.error('注销失败:', error);
-                    alert(error.message || '注销失败');
-                }
-            });
-        });
+    };
     </script>
+
+    <script src="js/delete-account.js"></script>
 </body>
 </html> 

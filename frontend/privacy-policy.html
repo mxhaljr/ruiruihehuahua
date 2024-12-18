@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>隐私政策 - 瑞瑞和华华</title>
+    <link href="css/style.css" rel="stylesheet">
+    <link href="css/privacy-policy.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <div class="policy-wrapper">
+            <div class="policy-consent" id="policyConsent">
+                <h2>隐私政策确认</h2>
+                <p>在查看详细的隐私政策之前，请确认：</p>
+                <div class="consent-checkbox">
+                    <label>
+                        <input type="checkbox" id="consentCheckbox">
+                        <span>我同意阅读并遵守隐私政策的所有条款</span>
+                    </label>
+                </div>
+                <button class="consent-button" id="consentButton" disabled>确认并继续</button>
+            </div>
+
+            <div class="policy-content" id="policyContent" style="display: none;">
+                <h1>隐私政策</h1>
+                <p class="last-updated">最后更新日期：2024年12月</p>
+
+                <section>
+                    <h2>1. 信息收集</h2>
+                    <p>我们收集的信息包括：</p>
+                    <ul>
+                        <li>账户信息（电子邮件地址）</li>
+                        <li>您添加的纪念日和生日信息</li>
+                        <li>您设置的倒数日数据</li>
+                        <li>基本的访问日志信息</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>2. 信息使用</h2>
+                    <p>我们使用收集的信息用于：</p>
+                    <ul>
+                        <li>为您提供生日提醒和纪念日提醒服务</li>
+                        <li>发送重要的提醒通知</li>
+                        <li>改进和优化我们的服务体验</li>
+                        <li>处理您的反馈和建议</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>3. 信息保护</h2>
+                    <p>我们采取以下措施保护您的信息：</p>
+                    <ul>
+                        <li>所有数据传输采用HTTPS加密</li>
+                        <li>密码经过加密存储，任何人无法查看原文</li>
+                        <li>定期备份数据确保安全</li>
+                        <li>只有必要的管理人员才能访问用户数据</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>4. 信息共享</h2>
+                    <p>我们承诺：</p>
+                    <ul>
+                        <li>绝不会出售您的个人信息</li>
+                        <li>不会向任何第三方分享您的数据</li>
+                        <li>除非法律要求，否则不会披露您的信息</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>5. 您的权利</h2>
+                    <p>作为用户，您拥有以下权利：</p>
+                    <ul>
+                        <li>随时查看和修改您的个人信息</li>
+                        <li>导出您保存的纪念日数据</li>
+                        <li>删除您的账号及所有相关数据</li>
+                        <li>选择是否接收提醒通知</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>6. 数据存储</h2>
+                    <p>关于您的数据：</p>
+                    <ul>
+                        <li>所有数据存储在中国大陆的服务器上</li>
+                        <li>定期进行数据备份保护</li>
+                        <li>您可以随时导出或删除自己的数据</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>7. 隐私政策更新</h2>
+                    <p>如果本隐私政策发生变更：</p>
+                    <ul>
+                        <li>我们会在网站醒目位置通知您</li>
+                        <li>重要更新会通过邮件告知</li>
+                        <li>您可以选择是否继续使用我们的服务</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>8. 联系我们</h2>
+                    <p>如果您有任何问题或建议：</p>
+                    <ul>
+                        <li>邮箱：2948909943@qq.com</li>
+                        <li>微信：ruiruihuahua</li>
+                        <li>所有归属权归瑞瑞和华华网站所有，包括解释权。</li>
+                    </ul>
+                </section>
+
+                <div class="back-to-home">
+                    <a href="index.html">返回首页</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const consentCheckbox = document.getElementById('consentCheckbox');
+            const consentButton = document.getElementById('consentButton');
+            const policyConsent = document.getElementById('policyConsent');
+            const policyContent = document.getElementById('policyContent');
+
+            // 检查是否已同意
+            const hasConsented = localStorage.getItem('privacyPolicyConsent');
+            if (hasConsented) {
+                policyConsent.style.display = 'none';
+                policyContent.style.display = 'block';
+            }
+
+            // 复选框状态改变
+            consentCheckbox.addEventListener('change', () => {
+                consentButton.disabled = !consentCheckbox.checked;
+            });
+
+            // 确认按钮点击
+            consentButton.addEventListener('click', () => {
+                if (consentCheckbox.checked) {
+                    localStorage.setItem('privacyPolicyConsent', 'true');
+                    policyConsent.style.display = 'none';
+                    policyContent.style.display = 'block';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

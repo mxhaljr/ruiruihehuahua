@@ -4,222 +4,61 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>注册 - 生日提醒网站</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        body {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 40px 0;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 1000px;
-            margin: 0 auto;
-        }
-
-        .register-wrapper {
-            display: flex;
-            background: white;
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-        }
-
-        .register-banner {
-            flex: 1;
-            background: linear-gradient(135deg, #6B73FF 0%, #000DFF 100%);
-            padding: 40px;
-            color: white;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            position: relative;
-        }
-
-        .register-banner::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('https://api.iconify.design/clarity/user-new-line.svg?color=white') no-repeat center center;
-            background-size: 200px;
-            opacity: 0.1;
-        }
-
-        .register-banner h1 {
-            font-size: 2.5em;
-            font-weight: 700;
-            margin-bottom: 20px;
-            position: relative;
-        }
-
-        .register-banner p {
-            font-size: 1.1em;
-            opacity: 0.9;
-            line-height: 1.8;
-            position: relative;
-        }
-
-        .register-form {
-            flex: 1;
-            padding: 40px 50px;
-            background: white;
-        }
-
-        .form-title {
-            color: #2c3e50;
-            font-weight: 600;
-            margin-bottom: 30px;
-            text-align: center;
-            font-size: 1.8em;
-            position: relative;
-        }
-
-        .form-title::after {
-            content: '';
-            position: absolute;
-            bottom: -10px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 50px;
-            height: 3px;
-            background: linear-gradient(to right, #6B73FF, #000DFF);
-            border-radius: 3px;
-        }
-
-        .form-control {
-            height: 48px;
-            border: 2px solid #e9ecef;
-            border-radius: 10px;
-            padding: 10px 15px;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-        }
-
-        .form-control:focus {
-            border-color: #6B73FF;
-            box-shadow: 0 0 0 0.2rem rgba(107, 115, 255, 0.25);
-        }
-
-        .verification-code {
-            display: flex;
-            gap: 12px;
-        }
-
-        .verification-code input {
-            flex: 1;
-        }
-
-        #sendCode {
-            min-width: 120px;
-            height: 48px;
-            border-radius: 10px;
-            background: #6B73FF;
-            border: none;
-            color: white;
-            transition: all 0.3s ease;
-        }
-
-        #sendCode:hover:not(:disabled) {
-            background: #000DFF;
-            transform: translateY(-2px);
-        }
-
-        #sendCode:disabled {
-            background: #a0a0a0;
-        }
-
-        .btn-primary {
-            height: 48px;
-            background: linear-gradient(135deg, #6B73FF 0%, #000DFF 100%);
-            border: none;
-            border-radius: 10px;
-            font-weight: 500;
-            letter-spacing: 1px;
-            transition: all 0.3s ease;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(107, 115, 255, 0.4);
-        }
-
-        .mt-3 a {
-            color: #6B73FF;
-            text-decoration: none;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-
-        .mt-3 a:hover {
-            color: #000DFF;
-            transform: translateY(-1px);
-        }
-
-        @media (max-width: 768px) {
-            .register-banner {
-                display: none;
-            }
-            
-            .container {
-                padding: 0 20px;
-            }
-            
-            .register-form {
-                padding: 30px;
-            }
-        }
-    </style>
+    <link href="css/common.css" rel="stylesheet">
+    <link href="css/register.css" rel="stylesheet">
 </head>
 <body>
     <div class="container">
         <div class="register-wrapper">
             <div class="register-banner">
                 <h1>欢迎注册</h1>
-                <p>在这里，记录每一个值得纪念的日子。</p>
-                <p>让我们一起珍藏美好时光。</p>
+                <p>加入我们，开始记录生活中的重要时刻。</p>
+                <p>我们会帮您记住每一个值得纪念的日子。</p>
             </div>
             <div class="register-form">
-                <h2 class="form-title">账号注册</h2>
+                <h2 class="form-title">创建账号</h2>
                 <form id="registerForm">
                     <div class="mb-3">
                         <label class="form-label">用户名</label>
                         <input type="text" class="form-control" id="username" 
-                               autocomplete="username" required>
+                               placeholder="请输入用户名" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">邮箱</label>
+                        <input type="email" class="form-control" id="email" 
+                               placeholder="请输入邮箱" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">验证码</label>
                         <div class="verification-code">
-                            <input type="email" class="form-control" id="email" 
-                                   autocomplete="email" required>
+                            <input type="text" class="form-control" id="code" 
+                                   placeholder="请输入验证码" required>
                             <button type="button" class="btn" id="sendCode">
                                 发送验证码
                             </button>
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">验证码</label>
-                        <input type="text" class="form-control" id="code" 
-                               autocomplete="one-time-code" required>
-                    </div>
-                    <div class="mb-3">
                         <label class="form-label">密码</label>
                         <input type="password" class="form-control" id="password" 
-                               autocomplete="new-password" required>
+                               placeholder="请输入密码" required>
+                        <div class="password-strength">
+                            <div class="strength-bar">
+                                <div id="passwordStrength" class="strength-meter"></div>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <span>强度：</span>
+                                <span id="strengthText" class="strength-text"></span>
+                            </div>
+                            <div id="strengthTips"></div>
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">确认密码</label>
                         <input type="password" class="form-control" id="confirmPassword" 
-                               autocomplete="new-password" required>
+                               placeholder="请再次输入密码" required>
                     </div>
-                    <button type="submit" class="btn btn-primary w-100" id="submitBtn">注册</button>
+                    <button type="submit" class="btn btn-primary" id="submitBtn">注册</button>
                     <div class="mt-3 text-center">
                         已有账号？<a href="login.html">立即登录</a>
                     </div>
@@ -228,112 +67,12 @@
         </div>
     </div>
 
-    <!-- 引入 main.js -->
-    <script src="js/main.js"></script>
-
-    <!-- 内联脚本，避免额外的加载 -->
     <script>
-        // 注册表单提交
-        document.getElementById('registerForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const submitBtn = document.getElementById('submitBtn');
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 注册中...';
-
-            try {
-                const username = document.getElementById('username').value;
-                const email = document.getElementById('email').value;
-                const code = document.getElementById('code').value;
-                const password = document.getElementById('password').value;
-                const confirmPassword = document.getElementById('confirmPassword').value;
-
-                if (password !== confirmPassword) {
-                    throw new Error('两次输入的密码不一致');
-                }
-
-                const response = await fetch(`${app.apiBaseUrl}/auth/register`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        username,
-                        email,
-                        password,
-                        code
-                    })
-                });
-
-                const data = await response.json();
-                
-                if (!response.ok) {
-                    throw new Error(data.message || '注册失败');
-                }
-
-                alert('注册成功！请登录');
-                window.location.href = `login.html?email=${encodeURIComponent(email)}`;
-
-            } catch (error) {
-                console.error('注册失败:', error);
-                alert(error.message || '注册失败，请重试');
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.textContent = '注册';
-            }
-        });
-
-        // 发送验证码
-        let countdown = 0;
-        let timer = null;
-        document.getElementById('sendCode').addEventListener('click', async () => {
-            const button = document.getElementById('sendCode');
-            const email = document.getElementById('email').value;
-            
-            if (!email) {
-                alert('请输入邮箱地址');
-                return;
-            }
-
-            try {
-                button.disabled = true;
-                button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 发送中...';
-
-                const response = await fetch(`${app.apiBaseUrl}/auth/send-code`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        email,
-                        type: 'register'
-                    })
-                });
-
-                const data = await response.json();
-                if (!response.ok) {
-                    throw new Error(data.message || '发送验证码失败');
-                }
-
-                // 开始倒计时
-                countdown = 60;
-                timer = setInterval(() => {
-                    button.textContent = `${countdown}秒后重试`;
-                    countdown--;
-                    if (countdown < 0) {
-                        clearInterval(timer);
-                        button.disabled = false;
-                        button.textContent = '发送验证码';
-                    }
-                }, 1000);
-
-            } catch (error) {
-                console.error('发送验证码失败:', error);
-                alert(error.message || '发送验证码失败');
-                button.disabled = false;
-                button.textContent = '发送验证码';
-            }
-        });
+    window.app = {
+        apiBaseUrl: 'http://localhost:3000/api'
+    };
     </script>
+    <script src="js/common.js"></script>
+    <script src="js/register.js"></script>
 </body>
 </html> 

@@ -1,436 +1,420 @@
 class CountdownManager {
     constructor() {
-        // 等待DOM加载完成后再初始化
-        document.addEventListener('DOMContentLoaded', () => {
-            this.form = document.getElementById('countdownForm');
-            this.listContainer = document.getElementById('countdownList');
-            this.modal = new bootstrap.Modal(document.getElementById('countdownModal'));
-            this.saveButton = document.getElementById('saveButton');
-            this.currentEditId = null;
-            this.updateInterval = null;
-            this.initEventListeners();
-            this.loadCountdowns();
+        if (!window.app.auth.isAuthenticated()) {
+            window.location.href = 'login.html';
+            return;
+        }
+
+        this.initElements();
+        this.initEventListeners();
+        this.loadCountdowns();
+
+        // 添加页面卸载时的清理
+        window.addEventListener('beforeunload', () => {
+            if (this.updateInterval) {
+                clearInterval(this.updateInterval);
+            }
         });
     }
 
-    initEventListeners() {
-        // 确保saveButton存在
-        if (this.saveButton) {
-            this.saveButton.addEventListener('click', () => {
-                console.log('保存按钮被点击'); // 添加日志
-                this.handleSave();
-            });
-        } else {
-            console.error('保存按钮未找到');
-        }
+    initElements() {
+        this.form = document.getElementById('countdownForm');
+        this.modal = document.getElementById('countdownModal');
+        this.listContainer = document.getElementById('countdownList');
+        this.currentId = null;
+        this.allCountdowns = [];  // 缓存所有倒数日数据
+    }
 
-        // 添加左侧菜单的点击事件监听
-        document.querySelectorAll('.sidebar-item').forEach(item => {
-            item.addEventListener('click', (e) => {
-                const action = e.currentTarget.getAttribute('data-action');
-                switch(action) {
-                    case 'all':
-                        this.showAllCountdowns();
-                        break;
-                    case 'future':
-                        this.showFutureCountdowns();
-                        break;
-                    case 'past':
-                        this.showPastCountdowns();
-                        break;
-                }
+    initEventListeners() {
+        // 分类过滤器点击事件
+        document.querySelectorAll('.filter-tab').forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                const action = e.currentTarget.dataset.action;
+                this.switchTab(action);
             });
         });
+    }
+
+    switchTab(action) {
+        // 更新标签状态
+        document.querySelectorAll('.filter-tab').forEach(tab => {
+            tab.classList.toggle('active', tab.dataset.action === action);
+        });
+
+        // 过滤并显示数据
+        const now = new Date();
+        let filteredData = this.allCountdowns;
+
+        switch(action) {
+            case 'future':
+                filteredData = this.allCountdowns.filter(item => new Date(item.target_date) > now);
+                break;
+            case 'past':
+                filteredData = this.allCountdowns.filter(item => new Date(item.target_date) <= now);
+                break;
+        }
+
+        this.renderList(filteredData);
     }
 
     async loadCountdowns() {
         try {
             const response = await fetch(`${window.app.apiBaseUrl}/countdowns`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
+                headers: window.app.auth.getAuthHeaders()
             });
-            
-            if (!response.ok) throw new Error('获取倒数日列表失败');
-            
-            const countdowns = await response.json();
-            this.updateCounts(countdowns);
-            this.renderCountdownList(countdowns);
-            return countdowns;
+
+            if (!response.ok) throw new Error('获取倒数日失败');
+
+            this.allCountdowns = await response.json();
+            this.renderList(this.allCountdowns);
+            this.updateCounts();
+            this.startTimeUpdate();
         } catch (error) {
-            console.error('加载倒数日列表失败:', error);
-            alert('加载倒数日列表失败');
+            console.error('加载失败:', error);
+            this.showToast('加载倒数日列表失败', 'error');
         }
     }
 
-    renderCountdownList(countdowns) {
-        this.listContainer.innerHTML = countdowns.map(countdown => {
-            const timeLeft = this.calculateTimeLeft(countdown.target_date);
-            const isPast = timeLeft.total < 0;
-            
-            return `
-                <div class="col-12 mb-3">
-                    <div class="card h-100 border-0 shadow-sm">
-                        <div class="card-body p-0">
-                            <div class="d-flex align-items-center p-3 border-bottom">
-                                <div class="flex-grow-1">
-                                    <div class="d-flex align-items-center">
-                                        <h5 class="mb-0 fw-bold">${this.decrypt(countdown.title)}</h5>
-                                    </div>
-                                    <small class="text-muted">
-                                        目标日期：${new Date(countdown.target_date).toLocaleDateString()}
-                                    </small>
-                                </div>
-                                <div class="countdown-number ${isPast ? 'text-danger' : 'text-success'}">
-                                    ${this.formatTimeLeft(timeLeft)}
-                                </div>
-                                <div class="d-flex gap-2 ms-3">
-                                    <button class="btn btn-icon" onclick="countdownManager.editCountdown(${countdown.id})">
-                                        <i class="fas fa-edit text-primary"></i>
-                                    </button>
-                                    <button class="btn btn-icon" onclick="countdownManager.deleteCountdown(${countdown.id})">
-                                        <i class="fas fa-trash-alt text-danger"></i>
-                                    </button>
-                                </div>
-                            </div>
-                            ${countdown.description ? `
-                                <div class="px-3 py-2 bg-light">
-                                    <div class="d-flex align-items-center">
-                                        <i class="fas fa-comment-alt me-2 text-info"></i>
-                                        <span class="text-muted">${this.decrypt(countdown.description)}</span>
-                                    </div>
-                                </div>
-                            ` : ''}
-                        </div>
-                    </div>
+    renderList(countdowns) {
+        if (!this.listContainer) return;
+        
+        if (!countdowns.length) {
+            this.listContainer.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-calendar-times"></i>
+                    <p>暂无倒数日</p>
+                    <button class="btn-add" onclick="showModal()">
+                        <i class="fas fa-plus"></i>
+                        添加倒数日
+                    </button>
                 </div>
             `;
-        }).join('');
-
-        // 每秒更新一次倒计时显示
-        if (this.updateInterval) {
-            clearInterval(this.updateInterval);
+            return;
         }
-        this.updateInterval = setInterval(() => this.updateCountdowns(), 1000);
+
+        this.listContainer.innerHTML = countdowns.map(item => this.renderCard(item)).join('');
+    }
+
+    renderCard(countdown) {
+        const timeLeft = this.calculateTimeLeft(countdown.target_date);
+        const cardId = `countdown-${countdown.id}`;
+        const isPast = timeLeft.total < 0;
+
+        return `
+            <div class="countdown-card ${isPast ? 'past' : ''}" id="${cardId}">
+                <div class="countdown-header">
+                    <h3 class="countdown-title">${countdown.title}</h3>
+                    <div class="countdown-actions">
+                        <button onclick="countdownManager.edit(${countdown.id})" title="编辑">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="countdownManager.delete(${countdown.id})" title="删除">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="countdown-time" data-target="${countdown.target_date}">
+                    ${this.formatTimeLeft(timeLeft)}
+                </div>
+                <div class="countdown-info">
+                    <p>目标日期: ${new Date(countdown.target_date).toLocaleDateString()}</p>
+                    ${countdown.description ? `<p class="description">${countdown.description}</p>` : ''}
+                </div>
+            </div>
+        `;
     }
 
     calculateTimeLeft(targetDate) {
         const now = new Date().getTime();
         const target = new Date(targetDate).getTime();
-        const difference = target - now;
-        
-        const days = Math.floor(difference / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+        const diff = target - now;
 
         return {
-            total: difference,
-            days,
-            hours,
-            minutes,
-            seconds
+            total: diff,
+            days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+            hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+            minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
+            seconds: Math.floor((diff % (1000 * 60)) / 1000)
         };
     }
 
     formatTimeLeft(timeLeft) {
         if (timeLeft.total < 0) {
-            const pastTime = this.calculateTimeLeft(new Date());
-            return `已过期 ${Math.abs(timeLeft.days)}天${Math.abs(timeLeft.hours)}时${Math.abs(timeLeft.minutes)}分${Math.abs(timeLeft.seconds)}秒`;
-        }
-        
-        let result = '';
-        if (timeLeft.days > 0) {
-            result += `${timeLeft.days}天`;
-        }
-        result += `${timeLeft.hours}时${timeLeft.minutes}分${timeLeft.seconds}秒`;
-        return result;
-    }
-
-    updateCountdowns() {
-        const countdownElements = document.querySelectorAll('.countdown-number');
-        countdownElements.forEach(element => {
-            const targetDate = element.closest('.card').querySelector('small').textContent.split('：')[1];
-            const timeLeft = this.calculateTimeLeft(targetDate);
-            element.textContent = this.formatTimeLeft(timeLeft);
-            element.className = `countdown-number ${timeLeft.total < 0 ? 'text-danger' : 'text-success'}`;
-        });
-    }
-
-    // 在组件销毁时清除定时器
-    destroy() {
-        if (this.updateInterval) {
-            clearInterval(this.updateInterval);
-        }
-    }
-
-    // 加密函数
-    encrypt(text) {
-        const base64 = btoa(unescape(encodeURIComponent(text)));
-        return base64.split('').map(char => {
-            const mapping = {
-                'A': 'P', 'B': 'Q', 'C': 'R', 'D': 'S', 'E': 'T',
-                'F': 'U', 'G': 'V', 'H': 'W', 'I': 'X', 'J': 'Y',
-                'K': 'Z', 'L': 'A', 'M': 'B', 'N': 'C', 'O': 'D',
-                'P': 'E', 'Q': 'F', 'R': 'G', 'S': 'H', 'T': 'I',
-                'U': 'J', 'V': 'K', 'W': 'L', 'X': 'M', 'Y': 'N',
-                'Z': 'O', 'a': 'p', 'b': 'q', 'c': 'r', 'd': 's',
-                'e': 't', 'f': 'u', 'g': 'v', 'h': 'w', 'i': 'x',
-                'j': 'y', 'k': 'z', 'l': 'a', 'm': 'b', 'n': 'c',
-                'o': 'd', 'p': 'e', 'q': 'f', 'r': 'g', 's': 'h',
-                't': 'i', 'u': 'j', 'v': 'k', 'w': 'l', 'x': 'm',
-                'y': 'n', 'z': 'o', '0': '5', '1': '6', '2': '7',
-                '3': '8', '4': '9', '5': '0', '6': '1', '7': '2',
-                '8': '3', '9': '4', '+': '-', '/': '_', '=': '.'
+            // 已过期的情况
+            const absTimeLeft = {
+                days: Math.abs(timeLeft.days),
+                hours: Math.abs(timeLeft.hours),
+                minutes: Math.abs(timeLeft.minutes),
+                seconds: Math.abs(timeLeft.seconds)
             };
-            return mapping[char] || char;
-        }).join('');
+            return this.formatTimeString(absTimeLeft, true);
+        }
+        return this.formatTimeString(timeLeft, false);
     }
 
-    // 解密函数
-    decrypt(text) {
-        if (!text) return '';
+    formatTimeString(time, isPast) {
+        let result = '';
+        const prefix = isPast ? '已过去 ' : '还剩 ';
+
+        if (time.days > 0) {
+            result += `${time.days}天`;
+        }
+        if (time.hours > 0 || result !== '') {
+            result += `${String(time.hours).padStart(2, '0')}时`;
+        }
+        if (time.minutes > 0 || result !== '') {
+            result += `${String(time.minutes).padStart(2, '0')}分`;
+        }
+        result += `${String(time.seconds).padStart(2, '0')}秒`;
+
+        return prefix + result;
+    }
+
+    updateCounts() {
+        const now = new Date();
+        const total = this.allCountdowns.length;
+        const future = this.allCountdowns.filter(c => new Date(c.target_date) > now).length;
+        const past = total - future;
+
+        document.getElementById('totalCount').textContent = total;
+        document.getElementById('futureCount').textContent = future;
+        document.getElementById('pastCount').textContent = past;
+    }
+
+    showModal(id = null) {
+        // 设置当前编辑的ID
+        this.currentId = id;
+        this.modal.style.display = 'block';
+        document.getElementById('modalTitle').textContent = 
+            id ? '编辑倒数日' : '添加倒数日';
         
-        const reverseMapping = {
-            'P': 'A', 'Q': 'B', 'R': 'C', 'S': 'D', 'T': 'E',
-            'U': 'F', 'V': 'G', 'W': 'H', 'X': 'I', 'Y': 'J',
-            'Z': 'K', 'A': 'L', 'B': 'M', 'C': 'N', 'D': 'O',
-            'E': 'P', 'F': 'Q', 'G': 'R', 'H': 'S', 'I': 'T',
-            'J': 'U', 'K': 'V', 'L': 'W', 'M': 'X', 'N': 'Y',
-            'O': 'Z', 'p': 'a', 'q': 'b', 'r': 'c', 's': 'd',
-            't': 'e', 'u': 'f', 'v': 'g', 'w': 'h', 'x': 'i',
-            'y': 'j', 'z': 'k', 'a': 'l', 'b': 'm', 'c': 'n',
-            'd': 'o', 'e': 'p', 'f': 'q', 'g': 'r', 'h': 's',
-            'i': 't', 'j': 'u', 'k': 'v', 'l': 'w', 'm': 'x',
-            'n': 'y', 'o': 'z', '5': '0', '6': '1', '7': '2',
-            '8': '3', '9': '4', '0': '5', '1': '6', '2': '7',
-            '3': '8', '4': '9', '-': '+', '_': '/', '.': '='
+        // 如果是添加新的倒数日，清空表单
+        if (!id) {
+            document.getElementById('title').value = '';
+            document.getElementById('targetDate').value = '';
+            document.getElementById('description').value = '';
+        }
+    }
+
+    hideModal() {
+        this.modal.style.display = 'none';
+        this.form.reset();
+        // 清除当前编辑的ID
+        this.currentId = null;
+    }
+
+    async saveCountdown() {
+        const formData = {
+            title: document.getElementById('title').value.trim(),
+            target_date: document.getElementById('targetDate').value,
+            description: document.getElementById('description').value.trim()
         };
 
-        const base64 = text.split('').map(char => reverseMapping[char] || char).join('');
-        try {
-            return decodeURIComponent(escape(atob(base64)));
-        } catch (e) {
-            console.error('解密失败:', e);
-            return text;
-        }
-    }
-
-    async handleSave() {
-        const title = document.getElementById('title').value.trim();
-        const target_date = document.getElementById('target_date').value;
-        const description = document.getElementById('description').value.trim();
-
-        if (!title || !target_date) {
-            alert('请填写必填字段');
+        if (!formData.title || !formData.target_date) {
+            this.showToast('请填写标题和目标日期', 'error');
             return;
         }
 
-        const countdownData = {
-            title: this.encrypt(title),
-            target_date,
-            description: description ? this.encrypt(description) : ''
-        };
-
         try {
-            if (this.currentEditId) {
-                await this.updateCountdown(this.currentEditId, countdownData);
+            // 如果是编辑现有倒数日
+            if (this.currentId !== null && this.currentId !== undefined) {
+                // 先在前端更新数据
+                const index = this.allCountdowns.findIndex(item => item.id === this.currentId);
+                if (index !== -1) {
+                    // 更新本地数据，保留原有数据的其他字段
+                    const originalData = this.allCountdowns[index];
+                    
+                    // 后台更新
+                    try {
+                        const response = await fetch(`${window.app.apiBaseUrl}/countdowns/${this.currentId}`, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                ...window.app.auth.getAuthHeaders()
+                            },
+                            body: JSON.stringify(formData)
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('更新失败');
+                        }
+
+                        // 获取后端返回的更新后的数据
+                        const updatedData = await response.json();
+                        
+                        // 使用后端返回的数据更新本地数据
+                        this.allCountdowns[index] = {
+                            ...originalData,
+                            ...updatedData
+                        };
+                        
+                        // 立即更新界面显示
+                        this.renderList(this.allCountdowns);
+                        
+                        // 保持当前标签状态
+                        const activeTab = document.querySelector('.filter-tab.active');
+                        if (activeTab) {
+                            this.switchTab(activeTab.dataset.action);
+                        }
+                        
+                        // 显示成功提示
+                        this.showToast('修改成功');
+                        this.hideModal();
+                    } catch (error) {
+                        console.error('后台同步失败:', error);
+                        this.showToast('保存失败，请重试', 'error');
+                        // 如果后端更新失败，回滚本地数据
+                        this.allCountdowns[index] = originalData;
+                        this.renderList(this.allCountdowns);
+                    }
+                } else {
+                    throw new Error('找不到要编辑的倒数日');
+                }
             } else {
-                await this.createCountdown(countdownData);
+                // 如果是新增倒数日，仍然需要先调用API获取ID
+                const response = await fetch(`${window.app.apiBaseUrl}/countdowns`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...window.app.auth.getAuthHeaders()
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (!response.ok) throw new Error('保存失败');
+
+                const newCountdown = await response.json();
+                this.allCountdowns.push(newCountdown);
+                this.renderList(this.allCountdowns);
+                
+                // 保持当前标签状态
+                const activeTab = document.querySelector('.filter-tab.active');
+                if (activeTab) {
+                    this.switchTab(activeTab.dataset.action);
+                }
+
+                this.showToast('添加成功');
+                this.hideModal();
             }
-            
-            this.modal.hide();
-            this.form.reset();
-            this.currentEditId = null;
-            await this.loadCountdowns();
         } catch (error) {
             console.error('保存失败:', error);
-            alert('保存失败');
+            this.showToast('保存失���，请重试', 'error');
         }
     }
 
-    async createCountdown(countdownData) {
-        const response = await fetch(`${window.app.apiBaseUrl}/countdowns`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            },
-            body: JSON.stringify(countdownData)
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || '添加倒数日失败');
+    async delete(id) {
+        // 使用自定义确认框
+        if (!await this.showConfirm('确定要删除这个倒数日吗？')) {
+            return;
         }
-        alert('添加成功！');
-    }
-
-    async deleteCountdown(id) {
-        if (!confirm('确定要删除这条倒数日信息吗？')) return;
 
         try {
             const response = await fetch(`${window.app.apiBaseUrl}/countdowns/${id}`, {
                 method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
+                headers: window.app.auth.getAuthHeaders()
             });
 
             if (!response.ok) throw new Error('删除失败');
-            
+
+            this.showToast('删除成功');
             this.loadCountdowns();
-            alert('删除成功！');
         } catch (error) {
             console.error('删除失败:', error);
-            alert('删除失败');
+            this.showToast('删除失败，请重试', 'error');
         }
     }
 
-    async editCountdown(id) {
+    async edit(id) {
         try {
-            const response = await fetch(`${window.app.apiBaseUrl}/countdowns/${id}`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
-            });
-            
-            if (!response.ok) throw new Error('获取倒数日信息失败');
-            
-            const countdown = await response.json();
-            
-            document.getElementById('title').value = this.decrypt(countdown.title);
-            document.getElementById('target_date').value = countdown.target_date.split('T')[0];
-            document.getElementById('description').value = countdown.description ? this.decrypt(countdown.description) : '';
-            
-            this.currentEditId = id;
-            document.getElementById('modalTitle').textContent = '编辑倒数日';
-            this.modal.show();
+            // 从缓存中查找倒数日数据
+            const countdown = this.allCountdowns.find(item => item.id === id);
+            if (!countdown) {
+                throw new Error('倒数日不存在');
+            }
+
+            // 填充表单数据
+            document.getElementById('title').value = countdown.title;
+            document.getElementById('targetDate').value = countdown.target_date.split('T')[0];
+            document.getElementById('description').value = countdown.description || '';
+
+            // 显示模态框并设置当前编辑的ID
+            this.showModal(id);
         } catch (error) {
             console.error('编辑失败:', error);
-            alert('获取倒数日信息失败');
+            this.showToast('获取数据失败', 'error');
         }
     }
 
-    async updateCountdown(id, countdownData) {
-        const response = await fetch(`${window.app.apiBaseUrl}/countdowns/${id}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            },
-            body: JSON.stringify(countdownData)
+    // 添加提示框方法
+    showToast(message, type = 'success') {
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+
+        // 动画显示
+        setTimeout(() => toast.classList.add('show'), 10);
+
+        // 3秒后消失
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    // 添加确认框方法
+    showConfirm(message) {
+        return new Promise((resolve) => {
+            const confirmBox = document.createElement('div');
+            confirmBox.className = 'confirm-box';
+            confirmBox.innerHTML = `
+                <div class="confirm-content">
+                    <p>${message}</p>
+                    <div class="confirm-buttons">
+                        <button class="btn-cancel">取消</button>
+                        <button class="btn-confirm">确定</button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(confirmBox);
+            setTimeout(() => confirmBox.classList.add('show'), 10);
+
+            // 绑定按钮事件
+            const cancelBtn = confirmBox.querySelector('.btn-cancel');
+            const confirmBtn = confirmBox.querySelector('.btn-confirm');
+
+            const cleanup = (result) => {
+                confirmBox.classList.remove('show');
+                setTimeout(() => confirmBox.remove(), 300);
+                resolve(result);
+            };
+
+            cancelBtn.onclick = () => cleanup(false);
+            confirmBtn.onclick = () => cleanup(true);
         });
-
-        if (!response.ok) throw new Error('更新失败');
-        alert('更新成功！');
     }
 
-    async showAllCountdowns() {
-        console.log('显示所有倒数日');  // 添加日志
-        this.setActiveTab('all');
-        try {
-            const response = await fetch(`${window.app.apiBaseUrl}/countdowns`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
-            });
-            if (!response.ok) throw new Error('获取所有倒数日失败');
-            
-            const countdowns = await response.json();
-            console.log('获取到的倒数日:', countdowns);  // 添加日志
-            this.updateCounts(countdowns);
-            this.renderCountdownList(countdowns);
-        } catch (error) {
-            console.error('加载所有倒数日失败:', error);
+    // 添加实时更新方法
+    startTimeUpdate() {
+        if (this.updateInterval) {
+            clearInterval(this.updateInterval);
         }
-    }
-
-    async showFutureCountdowns() {
-        console.log('显示未来倒数日');
-        this.setActiveTab('future');
-        try {
-            const response = await fetch(`${window.app.apiBaseUrl}/countdowns/future`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
-            });
-            if (!response.ok) throw new Error('获取未来倒数日失败');
-            
-            const countdowns = await response.json();
-            console.log('获取到的未来倒数日:', countdowns);
-            
-            // 再次验证日期
-            const today = new Date();
-            const futureCountdowns = countdowns.filter(countdown => {
-                const targetDate = new Date(countdown.target_date);
-                return targetDate > today;
-            });
-            
-            this.renderCountdownList(futureCountdowns);
-        } catch (error) {
-            console.error('加载未来倒数日失败:', error);
-        }
-    }
-
-    async showPastCountdowns() {
-        console.log('显示已过期倒数日');
-        this.setActiveTab('past');
-        try {
-            const response = await fetch(`${window.app.apiBaseUrl}/countdowns/past`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
-            });
-            if (!response.ok) throw new Error('获取已过期倒数日失败');
-            
-            const countdowns = await response.json();
-            console.log('获取到的已过期倒数日:', countdowns);
-            
-            // 再次验证日期
-            const today = new Date();
-            const pastCountdowns = countdowns.filter(countdown => {
-                const targetDate = new Date(countdown.target_date);
-                return targetDate <= today;
-            });
-            
-            this.renderCountdownList(pastCountdowns);
-        } catch (error) {
-            console.error('加载已过期倒数日失败:', error);
-        }
-    }
-
-    setActiveTab(tab) {
-        document.querySelectorAll('.sidebar-item').forEach(item => {
-            item.classList.remove('active');
-        });
-        const tabMap = {
-            'all': 0,
-            'future': 1,
-            'past': 2
-        };
-        document.querySelectorAll('.sidebar-item')[tabMap[tab]].classList.add('active');
-    }
-
-    updateCounts(countdowns) {
-        const today = new Date();
         
-        // 总数
-        document.getElementById('totalCount').textContent = countdowns.length;
-        
-        // 未来倒数
-        const futureCount = countdowns.filter(countdown => {
-            return new Date(countdown.target_date) > today;
-        }).length;
-        document.getElementById('futureCount').textContent = futureCount;
-        
-        // 已过期
-        const pastCount = countdowns.filter(countdown => {
-            return new Date(countdown.target_date) <= today;
-        }).length;
-        document.getElementById('pastCount').textContent = pastCount;
+        this.updateInterval = setInterval(() => {
+            document.querySelectorAll('.countdown-time').forEach(timeElement => {
+                const targetDate = timeElement.dataset.target;
+                const timeLeft = this.calculateTimeLeft(targetDate);
+                timeElement.textContent = this.formatTimeLeft(timeLeft);
+            });
+        }, 1000);
     }
 }
 
-// 修改初始化方式
-const countdownManager = new CountdownManager(); 
+// 初始化
+const countdownManager = new CountdownManager();
+
+// 全局函数
+window.showModal = () => countdownManager.showModal();
+window.hideModal = () => countdownManager.hideModal();
+window.saveCountdown = () => countdownManager.saveCountdown();

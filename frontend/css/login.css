@@ -1,0 +1,339 @@
+body {
+    background: #374aae;
+    min-height: 100vh;
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: linear-gradient(135deg, #f6f8fb 0%, #e9edf3 100%);
+}
+
+.login-wrapper {
+    display: flex;
+    width: 100%;
+    max-width: 1000px;
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.login-banner {
+    flex: 1;
+    padding: 40px;
+    background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.login-banner::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('../images/pattern.svg') center/cover;
+    opacity: 0.1;
+}
+
+.login-banner > * {
+    position: relative;
+    z-index: 2;
+}
+
+.login-banner h1 {
+    font-size: 32px;
+    margin-bottom: 20px;
+    font-weight: 600;
+}
+
+.login-banner p {
+    font-size: 16px;
+    line-height: 1.6;
+    opacity: 0.9;
+}
+
+.login-form {
+    flex: 1;
+    padding: 40px;
+    background: white;
+}
+
+.form-title {
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 24px;
+    color: #333;
+    font-weight: 600;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #4B5563;
+    font-weight: 500;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #D1D5DB;
+    border-radius: 6px;
+    font-size: 16px;
+    transition: border-color 0.2s;
+}
+
+.form-group input:focus {
+    border-color: #4F46E5;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.privacy-check {
+    display: flex;
+    align-items: center;
+    margin: 20px 0;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+    color: #4B5563;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: auto;
+    margin-right: 8px;
+}
+
+.checkbox-label a {
+    color: #4F46E5;
+    text-decoration: none;
+    margin-left: 4px;
+}
+
+.checkbox-label a:hover {
+    text-decoration: underline;
+}
+
+.btn-submit {
+    width: 100%;
+    padding: 12px;
+    background: #4F46E5;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-submit:hover {
+    background: #4338CA;
+}
+
+.btn-submit:disabled {
+    background: #9CA3AF;
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.form-links {
+    margin-top: 20px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+}
+
+.form-links a {
+    color: #4F46E5;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.form-links a:hover {
+    color: #4338CA;
+    text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+    .login-wrapper {
+        flex-direction: column;
+    }
+
+    .login-banner {
+        padding: 30px;
+    }
+
+    .login-form {
+        padding: 30px;
+    }
+} 
+
+/* 提示框样式 */
+.alert-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.3s ease;
+}
+
+.alert-content {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+    animation: slideUp 0.3s ease;
+}
+
+.alert-content h3 {
+    margin: 0 0 15px 0;
+    color: #333;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.alert-content p {
+    margin: 0 0 20px 0;
+    color: #666;
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+.alert-button {
+    background: #4F46E5;
+    color: white;
+    border: none;
+    padding: 10px 25px;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.alert-button:hover {
+    background: #4338CA;
+    transform: translateY(-2px);
+}
+
+/* 不同类型的提示框样式 */
+.alert-modal.success .alert-content h3 {
+    color: #10B981;
+}
+
+.alert-modal.warning .alert-content h3 {
+    color: #F59E0B;
+}
+
+.alert-modal.error .alert-content h3 {
+    color: #EF4444;
+}
+
+/* 动画效果 */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .login-wrapper {
+        flex-direction: column;
+    }
+
+    .login-banner {
+        padding: 30px;
+    }
+
+    .login-form {
+        padding: 30px;
+    }
+}
+
+/* 小屏幕适配 */
+@media (max-width: 480px) {
+    .container {
+        padding: 15px;
+    }
+
+    .login-banner {
+        padding: 25px;
+    }
+
+    .login-banner h1 {
+        font-size: 24px;
+    }
+
+    .login-form {
+        padding: 25px;
+    }
+
+    .form-title {
+        font-size: 20px;
+    }
+
+    .form-group input {
+        font-size: 14px;
+    }
+
+    .alert-content {
+        width: calc(100% - 30px);
+        padding: 20px;
+    }
+
+    .alert-content h3 {
+        font-size: 18px;
+    }
+
+    .alert-content p {
+        font-size: 14px;
+    }
+
+    .alert-button {
+        font-size: 14px;
+        padding: 8px 20px;
+    }
+} 

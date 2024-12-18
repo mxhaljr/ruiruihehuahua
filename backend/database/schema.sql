@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS `Users` (
   `id` int NOT NULL AUTO_INCREMENT COMMENT '用户ID',
   `email` varchar(255) NOT NULL COMMENT '邮箱',
   `password` varchar(255) NOT NULL COMMENT '密码',
-  `username` varchar(255) NOT NULL COMMENT '用户名',
+  `username` varchar(256) NOT NULL COMMENT '用户名',
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`),
@@ -20,16 +20,16 @@ CREATE TABLE IF NOT EXISTS `Users` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户表';
 
 -- 验证码表
-CREATE TABLE IF NOT EXISTS `verification_codes` (
-    `id` INT NOT NULL AUTO_INCREMENT,
-    `email` VARCHAR(255) NOT NULL COMMENT '邮箱',
-    `code` VARCHAR(6) NOT NULL COMMENT '验证码',
-    `type` VARCHAR(20) NOT NULL COMMENT '验证码类型',
-    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    PRIMARY KEY (`id`),
-    INDEX `idx_email` (`email`),
-    INDEX `idx_code` (`code`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='验证码表';
+CREATE TABLE IF NOT EXISTS VerificationCodes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) NOT NULL,
+    code VARCHAR(6) NOT NULL,
+    type VARCHAR(20) NOT NULL,
+    used BOOLEAN DEFAULT false,
+    expiresAt DATETIME NOT NULL,
+    createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
 
 -- 生日表
 CREATE TABLE IF NOT EXISTS `birthdays` (
@@ -38,6 +38,8 @@ CREATE TABLE IF NOT EXISTS `birthdays` (
     `name` VARCHAR(255) NOT NULL COMMENT '姓名',
     `birth_date` DATE NOT NULL COMMENT '生日日期',
     `lunar` BOOLEAN NOT NULL DEFAULT FALSE COMMENT '是否农历',
+    `description` TEXT COMMENT '描述',
+    `reminder_days` INT DEFAULT 0 COMMENT '提前提醒天数',
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),

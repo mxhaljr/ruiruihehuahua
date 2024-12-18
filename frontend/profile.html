@@ -3,312 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>个人中心 - 生日提醒网站</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        body {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            min-height: 100vh;
-            padding-bottom: 40px;
-        }
-
-        .navbar {
-            background: linear-gradient(135deg, #6B73FF 0%, #000DFF 100%) !important;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-
-        .profile-card {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            padding: 2rem;
-            margin-bottom: 2rem;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .profile-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
-        }
-
-        .profile-header {
-            text-align: center;
-            margin-bottom: 2rem;
-            padding: 1.5rem;
-            background: linear-gradient(135deg, #6B73FF 0%, #000DFF 100%);
-            border-radius: 15px;
-            color: white;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .profile-header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('https://api.iconify.design/clarity/user-solid.svg?color=white') no-repeat center center;
-            background-size: 150px;
-            opacity: 0.1;
-        }
-
-        .profile-header h3 {
-            margin: 0;
-            font-size: 1.2rem;
-            font-weight: 500;
-            position: relative;
-            word-break: break-all;
-            line-height: 1.4;
-        }
-
-        @media (min-width: 768px) {
-            .profile-header h3 {
-                font-size: 1.1rem;
-                padding: 0 1rem;
-            }
-        }
-
-        @media (max-width: 767px) {
-            .profile-header h3 {
-                font-size: 1rem;
-            }
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1.5rem;
-            margin-top: 2rem;
-        }
-
-        .stat-item {
-            background: #f8f9fa;
-            padding: 1.5rem;
-            border-radius: 15px;
-            text-align: center;
-            transition: all 0.3s ease;
-            border: 2px solid transparent;
-        }
-
-        .stat-item:hover {
-            transform: translateY(-5px);
-            border-color: #6B73FF;
-            box-shadow: 0 10px 20px rgba(107, 115, 255, 0.1);
-        }
-
-        .stat-number {
-            font-size: 2.5rem;
-            font-weight: bold;
-            background: linear-gradient(135deg, #6B73FF 0%, #000DFF 100%);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 0.5rem;
-        }
-
-        .stat-label {
-            color: #666;
-            font-size: 1rem;
-            font-weight: 500;
-        }
-
-        .settings-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.5rem;
-            margin-top: 1rem;
-        }
-
-        .settings-card {
-            background: #f8f9fa;
-            padding: 2rem;
-            border-radius: 15px;
-            transition: all 0.3s ease;
-            border: 2px solid transparent;
-        }
-
-        .settings-card:hover {
-            transform: translateY(-5px);
-            border-color: #6B73FF;
-            box-shadow: 0 10px 20px rgba(107, 115, 255, 0.1);
-        }
-
-        .settings-card h5 {
-            color: #2c3e50;
-            margin-bottom: 1rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .settings-card h5 i {
-            color: #6B73FF;
-        }
-
-        .settings-card p {
-            color: #666;
-            margin-bottom: 1.5rem;
-            font-size: 0.95rem;
-            line-height: 1.6;
-        }
-
-        .settings-card .btn {
-            width: 100%;
-            padding: 0.8rem;
-            border-radius: 10px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-
-        .settings-card .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #6B73FF 0%, #000DFF 100%);
-            border: none;
-        }
-
-        .btn-logout {
-            background: #6c757d;
-            color: white;
-            border: none;
-        }
-
-        .btn-danger {
-            background: linear-gradient(135deg, #dc3545 0%, #b02a37 100%);
-            border: none;
-        }
-
-        @media (max-width: 768px) {
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
-            .settings-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .profile-card {
-                margin: 1rem;
-                padding: 1.5rem;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* 模态框样式 */
-        .modal-content {
-            border-radius: 15px;
-            border: none;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
-        }
-
-        .modal-header {
-            background: linear-gradient(135deg, #6B73FF 0%, #000DFF 100%);
-            color: white;
-            border-radius: 15px 15px 0 0;
-            border: none;
-        }
-
-        .modal-body {
-            padding: 2rem;
-        }
-
-        .form-control {
-            border-radius: 10px;
-            padding: 0.8rem;
-            border: 2px solid #e9ecef;
-            transition: all 0.3s ease;
-        }
-
-        .form-control:focus {
-            border-color: #6B73FF;
-            box-shadow: 0 0 0 0.2rem rgba(107, 115, 255, 0.25);
-        }
-
-        .privacy-section {
-            margin-bottom: 2rem;
-            padding: 1.5rem;
-            background: #f8f9fa;
-            border-radius: 15px;
-            transition: all 0.3s ease;
-        }
-
-        .privacy-section:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(107, 115, 255, 0.1);
-        }
-
-        .privacy-section h5 {
-            color: #2c3e50;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .privacy-section h5 i {
-            font-size: 1.2rem;
-        }
-
-        .privacy-section p {
-            color: #666;
-            margin-bottom: 0;
-            line-height: 1.6;
-        }
-
-        footer {
-            padding: 20px;
-            border-radius: 10px;
-        }
-
-        footer a {
-            color: #6B73FF;
-            transition: color 0.3s ease;
-        }
-
-        footer a:hover {
-            color: #000DFF;
-        }
-
-        .privacy-detail, .terms-detail {
-            padding: 1rem;
-        }
-
-        .privacy-detail h6, .terms-detail h6 {
-            color: #6B73FF;
-            margin-top: 1.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .privacy-detail ul, .terms-detail ul {
-            padding-left: 1.5rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .privacy-detail li, .terms-detail li {
-            margin-bottom: 0.5rem;
-            color: #666;
-        }
-    </style>
+    <title>个人中心</title>
+    <link href="css/common.css" rel="stylesheet">
+    <link href="css/nav.css" rel="stylesheet">
+    <link href="css/profile.css" rel="stylesheet">
 </head>
 <body>
+    <!-- 导航栏 -->
+    <div class="nav-container">
+        <!-- ... 导航内容 ... -->
+    </div>
+
     <!-- 内容区域 -->
     <div class="container mt-4">
         <!-- 个人信息卡片 -->
         <div class="profile-card mb-4">
             <div class="profile-header">
-                <h3 id="email"></h3>
+                <h3 id="userEmail"></h3>
             </div>
         </div>
 
@@ -338,144 +49,118 @@
                 <div class="settings-card">
                     <h5><i class="fas fa-key"></i> 修改密码</h5>
                     <p>定期更改密码可以提高账号安全性</p>
-                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+                    <button class="btn btn-primary" onclick="showPasswordModal()">
+                        <i class="fas fa-key"></i>
                         修改密码
                     </button>
                 </div>
                 <div class="settings-card">
                     <h5><i class="fas fa-sign-out-alt"></i> 退出登录</h5>
                     <p>退出当前账号，保护您的账号安全</p>
-                    <button class="btn btn-logout">
+                    <button class="btn btn-logout" id="logoutBtn">
+                        <i class="fas fa-sign-out-alt"></i>
                         退出登录
                     </button>
                 </div>
                 <div class="settings-card">
                     <h5><i class="fas fa-trash-alt"></i> 账号注销</h5>
                     <p>永久删除您的账号和所有数据</p>
-                    <button class="btn btn-danger" onclick="window.location.href='delete-account.html'">
+                    <a href="delete-account.html" class="btn btn-danger">
+                        <i class="fas fa-trash-alt"></i>
                         注销账号
-                    </button>
+                    </a>
                 </div>
             </div>
         </div>
-
-        <!-- 页脚 -->
-        <footer class="text-center mt-4 mb-4">
-            <p class="text-muted">
-                © 
-                <a href="#" class="text-decoration-none" data-bs-toggle="modal" data-bs-target="#privacyModal">
-                    隐私政策
-                </a> | 
-                <a href="#" class="text-decoration-none" data-bs-toggle="modal" data-bs-target="#termsModal">
-                    服务条款
-                </a>
-            </p>
-        </footer>
     </div>
 
-    <!-- 密码修改模态框 -->
-    <div class="modal fade" id="changePasswordModal" tabindex="-1">
+    <!-- 修改密码弹窗 -->
+    <div class="modal" id="passwordModal">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">修改密码</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <h5>修改密码</h5>
+                    <button type="button" class="close" onclick="closePasswordModal()">&times;</button>
                 </div>
                 <div class="modal-body">
                     <form id="passwordForm">
-                        <div class="mb-3">
-                            <label class="form-label">当前密码</label>
-                            <input type="password" class="form-control" id="currentPassword" required>
+                        <div class="form-group">
+                            <label for="currentPassword">当前密码</label>
+                            <input type="password" id="currentPassword" name="currentPassword" required>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">新密码</label>
-                            <input type="password" class="form-control" id="newPassword" required>
+
+                        <div class="form-group">
+                            <label for="newPassword">新密码</label>
+                            <input type="password" id="newPassword" name="newPassword" required>
+                            <!-- 添加密码强度提示部分 -->
+                            <div class="password-strength">
+                                <div class="strength-bar">
+                                    <div id="passwordStrength" class="strength-meter"></div>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <span>强度：</span>
+                                    <span id="strengthText" class="strength-text"></span>
+                                </div>
+                                <div id="strengthTips" class="strength-tips"></div>
+                            </div>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">确认新密码</label>
-                            <input type="password" class="form-control" id="confirmPassword" required>
+
+                        <div class="form-group">
+                            <label for="confirmPassword">确认新密码</label>
+                            <input type="password" id="confirmPassword" name="confirmPassword" required>
+                        </div>
+
+                        <div class="form-buttons">
+                            <button type="button" class="btn-cancel" onclick="closePasswordModal()">取消</button>
+                            <button type="submit" class="btn-save">保存</button>
                         </div>
                     </form>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                    <button type="button" class="btn btn-primary" id="savePasswordBtn">保存修改</button>
-                </div>
             </div>
         </div>
     </div>
 
-    <!-- 添加隐私政策详细模态框 -->
-    <div class="modal fade" id="privacyModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">隐私政策</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="privacy-detail">
-                        <h6>1. 信息收集</h6>
-                        <p>我们收集的信息包括：</p>
-                        <ul>
-                            <li>账号信息（邮箱、用户名）</li>
-                            <li>您提供的生日和纪念日信息</li>
-                            <li>使用服务时的日志信息</li>
-                        </ul>
-
-                        <h6>2. 信息使用</h6>
-                        <p>我们使用收集的信息：</p>
-                        <ul>
-                            <li>提供、维护和改进服务</li>
-                            <li>发送服务通知和提醒</li>
-                            <li>防止欺诈和滥用</li>
-                        </ul>
-
-                        <h6>3. 信息保护</h6>
-                        <p>我们采取多重措施保护您的信息：</p>
-                        <ul>
-                            <li>数据加密存储</li>
-                            <li>安全传输协议</li>
-                            <li>访问控制机制</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 添加服务条款模态框 -->
-    <div class="modal fade" id="termsModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">服务条款</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="terms-detail">
-                        <h6>1. 服务说明</h6>
-                        <p>我们提供生日提醒、纪念日和倒数日管理服务。</p>
-
-                        <h6>2. 用户责任</h6>
-                        <p>用户需要：</p>
-                        <ul>
-                            <li>提供真实准确的信息</li>
-                            <li>保护账号安全</li>
-                            <li>遵守相关法律法规</li>
-                        </ul>
-
-                        <h6>3. 服务变更</h6>
-                        <p>我们保留随时修改或终止服务的权利，并会提前通知用户重要变更。</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 脚本引用 -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- 基础配置和通用功能 -->
+    <script src="js/config.js"></script>
+    <script src="js/common.js"></script>
     <script src="js/main.js"></script>
+    <!-- 页面特定的JS -->
+    <script>
+        // 先定义全局对象
+        window.app = {
+            apiBaseUrl: 'http://localhost:3000/api',
+            auth: {
+                getToken() {
+                    return localStorage.getItem('token');
+                },
+                setToken(token) {
+                    localStorage.setItem('token', token);
+                },
+                getUserInfo() {
+                    const info = localStorage.getItem('userInfo');
+                    return info ? JSON.parse(info) : null;
+                },
+                setUserInfo(info) {
+                    localStorage.setItem('userInfo', JSON.stringify(info));
+                },
+                clear() {
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('userInfo');
+                },
+                getAuthHeaders() {
+                    const token = this.getToken();
+                    return token ? {
+                        'Authorization': `Bearer ${token}`
+                    } : {};
+                },
+                isAuthenticated() {
+                    const token = this.getToken();
+                    const userInfo = this.getUserInfo();
+                    return !!(token && userInfo);
+                }
+            }
+        };
+    </script>
     <script src="js/profile.js"></script>
 </body>
 </html> 

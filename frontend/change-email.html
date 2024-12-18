@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>更换邮箱 - 瑞瑞和华华</title>
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/change-email.css">
+</head>
+<body>
+    <div class="container">
+        <h1>邮箱更换</h1>
+        <form id="changeEmailForm" class="form-container">
+            <div class="form-group">
+                <label for="currentEmail">当前邮箱</label>
+                <input type="email" id="currentEmail" name="currentEmail" required>
+            </div>
+
+            <div class="form-group">
+                <label for="newEmail">新邮箱</label>
+                <input type="email" id="newEmail" name="newEmail" required>
+                <div class="validation-container">
+                    <div id="emailStrength" class="validation-meter"></div>
+                    <span id="validationText" class="validation-text"></span>
+                </div>
+                <p id="validationTips" class="validation-tips"></p>
+            </div>
+
+            <div class="form-group code-group">
+                <label for="code">验证码</label>
+                <div class="code-input-group">
+                    <input type="text" id="code" name="code" maxlength="6" required>
+                    <button type="button" id="sendCode" class="btn-send-code">获取验证码</button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="newPassword">新密码</label>
+                <input type="password" id="newPassword" name="newPassword" required>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-submit">确认更换</button>
+                <a href="profile.html" class="btn-cancel">返回个人中心</a>
+            </div>
+        </form>
+    </div>
+    <script src="js/config.js"></script>
+    <script src="js/change-email.js"></script>
+</body>
+</html> 

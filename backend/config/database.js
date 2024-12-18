@@ -1,14 +1,28 @@
-const mysql = require('mysql2/promise');
-require('dotenv').config();
+const { Sequelize } = require('sequelize');
 
-const pool = mysql.createPool({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
+const sequelize = new Sequelize({
+    dialect: 'mysql',
+    host: process.env.DB_HOST || 'localhost',
+    username: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || '317924',
+    database: process.env.DB_NAME || 'life_day',
+    logging: false,
+    pool: {
+        max: 5,
+        min: 0,
+        acquire: 30000,
+        idle: 10000
+    },
+    timezone: '+08:00'
 });
 
-module.exports = pool; 
+// 测试连接
+sequelize.authenticate()
+    .then(() => {
+        console.log('数据库连接成功');
+    })
+    .catch(err => {
+        console.error('数据库连接失败:', err);
+    });
+
+module.exports = sequelize; 

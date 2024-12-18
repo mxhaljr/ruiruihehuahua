@@ -1,30 +1,24 @@
 const mysql = require('mysql2/promise');
-require('dotenv').config();
+const config = require('../config/config');
 
-// 创建连接池
 const pool = mysql.createPool({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
+    host: config.db.host,
+    user: config.db.user,
+    password: config.db.password,
+    database: config.db.database,
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0
 });
 
-// 测试数据库连接
-async function testConnection() {
-    try {
-        const connection = await pool.getConnection();
+// 添加连接测试
+pool.getConnection()
+    .then(connection => {
         console.log('数据库连接成功');
         connection.release();
-    } catch (error) {
-        console.error('数据库连接失败:', error);
-        process.exit(1);
-    }
-}
-
-// 初始测试连接
-testConnection();
+    })
+    .catch(err => {
+        console.error('数据库连接失败:', err);
+    });
 
 module.exports = pool; 

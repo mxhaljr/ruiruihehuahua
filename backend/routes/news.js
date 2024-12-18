@@ -1,168 +1,197 @@
 const express = require('express');
 const router = express.Router();
-const Parser = require('rss-parser');
-const parser = new Parser({
-    customFields: {
-        item: [
-            ['description', 'content']
-        ]
-    }
-});
+const axios = require('axios');
 
-// 使用新浪新闻 API 和其他可用的 RSS 源
-const NEWS_APIS = {
-    sina: {
-        url: 'https://feed.mix.sina.com.cn/api/roll/get?pageid=153&lid=2509&k=&num=20&page=1',
-        async fetch() {
-            const response = await fetch(this.url);
-            const data = await response.json();
-            return data.result.data.map(item => ({
-                title: item.title,
-                link: item.url,
-                pubDate: new Date(item.ctime * 1000).toISOString(),
-                content: item.intro || item.title,
-                source: '新浪'
-            }));
-        }
-    },
-    people: {
-        url: 'http://www.people.com.cn/rss/politics.xml',
-        async fetch() {
-            const feed = await parser.parseURL(this.url);
-            return feed.items.map(item => ({
-                title: item.title,
-                link: item.link,
-                pubDate: new Date(item.pubDate).toISOString(),
-                content: item.content || item.description || item.title,
-                source: '人民网'
-            }));
-        }
-    },
-    chinanews: {
-        url: 'http://www.chinanews.com/rss/scroll-news.xml',
-        async fetch() {
-            const feed = await parser.parseURL(this.url);
-            return feed.items.map(item => ({
-                title: item.title,
-                link: item.link,
-                pubDate: new Date(item.pubDate).toISOString(),
-                content: item.content || item.description || item.title,
-                source: '中新网'
-            }));
-        }
-    },
-    tech: {
-        url: 'https://36kr.com/api/newsflash',
-        async fetch() {
-            const response = await fetch(this.url, {
-                headers: {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-                }
-            });
-            const data = await response.json();
-            return data.data.items.map(item => ({
-                title: item.title,
-                link: `https://36kr.com/newsflashes/${item.id}`,
-                pubDate: new Date(item.published_at).toISOString(),
-                content: item.description || item.title,
-                source: '科技'
-            }));
-        }
-    },
-    world: {
-        url: 'https://feed.mix.sina.com.cn/api/roll/get?pageid=153&lid=2510&k=&num=20&page=1',
-        async fetch() {
-            const response = await fetch(this.url);
-            const data = await response.json();
-            return data.result.data.map(item => ({
-                title: item.title,
-                link: item.url,
-                pubDate: new Date(item.ctime * 1000).toISOString(),
-                content: item.intro || item.title,
-                source: '国际'
-            }));
-        }
-    }
+// 新闻缓存
+let newsCache = {
+    data: null,
+    timestamp: 0
 };
 
-// 添加错误重试机制
-async function fetchWithRetry(fetcher, retries = 3) {
-    let lastError;
-    
-    for (let i = 0; i < retries; i++) {
-        try {
-            return await fetcher();
-        } catch (error) {
-            lastError = error;
-            console.warn(`重试第 ${i + 1} 次...`);
-            await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1))); // 递增延迟
-        }
+// 缓存时间（5分钟）
+const CACHE_DURATION = 5 * 60 * 1000;
+
+// 新闻API配置
+const NEWS_APIS = [
+    {
+        category: '要闻',
+        url: 'https://i.news.qq.com/trpc.qqnews_web.kv_srv.kv_srv_http_proxy/list?sub_srv_id=24hours&srv_id=pc&offset=0&limit=100&strategy=1&ext={"pool":["top","hot"],"is_filter":7,"check_type":true}'
+    },
+    {
+        category: '国内',
+        url: 'https://i.news.qq.com/trpc.qqnews_web.kv_srv.kv_srv_http_proxy/list?sub_srv_id=news_news_internal&srv_id=pc&offset=0&limit=100&strategy=1&ext={"pool":["top","hot"],"is_filter":7,"check_type":true}'
+    },
+    {
+        category: '娱乐',
+        url: 'https://i.news.qq.com/trpc.qqnews_web.kv_srv.kv_srv_http_proxy/list?sub_srv_id=ent&srv_id=pc&offset=0&limit=100&strategy=1&ext={"pool":["top","hot"],"is_filter":7,"check_type":true}'
     }
-    
-    throw lastError;
+];
+
+// 获取新闻数据
+async function fetchNewsData() {
+    try {
+        console.log('开始获取新闻数据...');
+        const startTime = Date.now();
+
+        const axiosConfig = {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'application/json',
+                'Referer': 'https://news.qq.com/'
+            },
+            timeout: 5000
+        };
+
+        const allNewsPromises = NEWS_APIS.map(api => 
+            axios.get(api.url, axiosConfig)
+                .then(res => ({
+                    category: api.category,
+                    data: res.data?.data?.list || []
+                }))
+                .catch(err => {
+                    console.error(`获取${api.category}失败:`, err.message);
+                    return null;
+                })
+        );
+
+        const results = await Promise.all(allNewsPromises);
+        console.log('新闻获取耗时:', Date.now() - startTime, 'ms');
+
+        // 处理新闻数据
+        const processNews = (newsData) => {
+            if (!newsData || !Array.isArray(newsData.data)) {
+                console.log(`${newsData?.category}数据无效`);
+                return [];
+            }
+
+            console.log(`${newsData.category}原始数据条数:`, newsData.data.length);
+            
+            return newsData.data.map(item => {
+                try {
+                    // 处理时间
+                    let newsTime;
+                    if (item.publish_time) {
+                        // 确保时间戳是数字且有效
+                        const timestamp = parseInt(item.publish_time) * 1000;
+                        if (!isNaN(timestamp)) {
+                            newsTime = new Date(timestamp).toISOString();
+                        } else {
+                            newsTime = new Date().toISOString();
+                        }
+                    } else {
+                        newsTime = new Date().toISOString();
+                    }
+
+                    return {
+                        id: item.id || item.article_id || String(Date.now()),
+                        title: item.title || '无标题',
+                        link: item.url || '#',
+                        time: newsTime,
+                        content: item.abstract || item.summary || '暂无内容',
+                        source: item.media_name || newsData.category,
+                        image: item.img?.url || item.thumb_nail?.url_list?.[0] || null
+                    };
+                } catch (error) {
+                    console.error('处理新闻数据时出错:', error);
+                    console.error('问题数据:', JSON.stringify(item).slice(0, 200));
+                    return null;
+                }
+            }).filter(Boolean); // 过滤掉处理失败的数据
+        };
+
+        // 合并所有新闻
+        const allNews = results
+            .filter(Boolean)
+            .flatMap(processNews)
+            .filter(news => news && news.title && news.time) // 确保必要字段存在
+            .sort((a, b) => {
+                try {
+                    return new Date(b.time) - new Date(a.time);
+                } catch {
+                    return 0;
+                }
+            });
+
+        console.log('合并后总新闻条数:', allNews.length);
+
+        if (allNews.length === 0) {
+            console.error('没有获取到任何新闻数据');
+            return null;
+        }
+
+        return allNews;
+    } catch (error) {
+        console.error('获取新闻失败:', error);
+        return null;
+    }
 }
 
-// 获取所有新闻
+// 定时更新新闻缓存
+async function updateNewsCache() {
+    console.log('=== 开始更新新闻缓存 ===');
+    console.log('更新时间:', new Date().toISOString());
+    
+    const news = await fetchNewsData();
+    if (news) {
+        newsCache = {
+            data: news,
+            timestamp: Date.now()
+        };
+        console.log('新闻缓存更新成功');
+    } else {
+        console.error('新闻缓存更新失败');
+    }
+}
+
+// 每小时更新一次新闻缓存
+setInterval(updateNewsCache, 60 * 60 * 1000);
+
+// 启动时先获取一次新闻
+updateNewsCache();
+
 router.get('/', async (req, res) => {
     try {
-        const allNews = {};
-        console.log('\n=== 开始获取新闻 ===');
-        
-        // 并行获取所有新闻源
-        const promises = Object.entries(NEWS_APIS).map(async ([source, api]) => {
-            try {
-                console.log(`\n[${source}] 开始获取新闻...`);
-                console.log(`[${source}] 请求URL:`, api.url);
-                
-                // 使用重试机制
-                const newsItems = await fetchWithRetry(() => api.fetch());
-                allNews[source] = newsItems;
-                
-                console.log(`[${source}] 获取成功:`, {
-                    数量: newsItems.length,
-                    示例新闻: newsItems.length > 0 ? {
-                        标题: newsItems[0].title,
-                        链接: newsItems[0].link,
-                        时间: newsItems[0].pubDate,
-                        来源: newsItems[0].source
-                    } : '无新闻'
-                });
-            } catch (error) {
-                console.error(`[${source}] 获取失败:`, {
-                    错误: error.message,
-                    堆栈: error.stack
-                });
-                allNews[source] = [];
-            }
-        });
+        console.log('=== 新闻接口请求开始 ===');
+        console.log('请求IP:', req.ip);
+        console.log('请求时间:', new Date().toISOString());
 
-        await Promise.all(promises);
-        
-        // 打印汇总信息
-        console.log('\n=== 新闻获取汇总 ===');
-        const summary = Object.entries(allNews).map(([source, news]) => ({
-            source,
-            count: news.length
-        }));
-        
-        console.table(summary);
-        
-        const totalNews = Object.values(allNews).reduce((sum, news) => sum + news.length, 0);
-        console.log(`\n总新闻数: ${totalNews} 条`);
-        
-        // 检查是否有新闻源获取失败
-        const failedSources = summary.filter(s => s.count === 0).map(s => s.source);
-        if (failedSources.length > 0) {
-            console.warn('\n警告: 以下新闻源获取失败:', failedSources);
+        // 检查缓存
+        if (newsCache.data && (Date.now() - newsCache.timestamp) < CACHE_DURATION) {
+            console.log('使用缓���数据');
+            console.log('缓存时间:', new Date(newsCache.timestamp).toISOString());
+            console.log('缓存数据条数:', newsCache.data.length);
+            return res.json(newsCache.data);
         }
 
-        res.json(allNews);
+        // 重新获取新闻
+        const news = await fetchNewsData();
+        if (news) {
+            newsCache = {
+                data: news,
+                timestamp: Date.now()
+            };
+            return res.json(news);
+        }
+
+        // 如果获取失败但有缓存，返回缓存
+        if (newsCache.data) {
+            console.log('获取失败，使用缓存数据');
+            return res.json(newsCache.data);
+        }
+
+        // 都失败了返回加载状态
+        return res.json([{
+            id: 'loading',
+            title: "新闻加载中...",
+            link: "#",
+            time: new Date().toISOString(),
+            content: "正在获取最新新闻，请稍后刷新...",
+            source: "系统提示",
+            image: null
+        }]);
     } catch (error) {
-        console.error('\n获取新闻失败:', {
-            错误: error.message,
-            堆栈: error.stack
-        });
-        res.status(500).json({ message: '获取新闻失败' });
+        console.error('新闻接口错误:', error);
+        res.status(500).json({ error: '服务器错误' });
     }
 });
 

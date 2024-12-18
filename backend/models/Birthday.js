@@ -1,54 +1,46 @@
-const db = require('../config/database');
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
 
-class Birthday {
-    static async findAll(userId) {
-        try {
-            console.log('执行查询, userId:', userId);
-            const [rows] = await db.execute(
-                'SELECT * FROM birthdays WHERE user_id = ?',
-                [userId]
-            );
-            console.log('查询结果:', rows);
-            return rows;
-        } catch (err) {
-            console.error('数据库查询错误:', err);
-            throw err;
-        }
+const Birthday = sequelize.define('Birthday', {
+    id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+        comment: '生日ID'
+    },
+    user_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        comment: '用户ID'
+    },
+    name: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        comment: '姓名'
+    },
+    birth_date: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        comment: '生日日期'
+    },
+    lunar: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+        comment: '是否农历'
+    },
+    description: {
+        type: DataTypes.TEXT,
+        comment: '描述'
+    },
+    reminder_days: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+        comment: '提前提醒天数'
     }
-
-    static async create(birthdayData) {
-        const { name, birth_date, description, reminder_days, lunar, user_id } = birthdayData;
-        const [result] = await db.execute(
-            'INSERT INTO birthdays (name, birth_date, description, reminder_days, lunar, user_id) VALUES (?, ?, ?, ?, ?, ?)',
-            [name, birth_date, description, reminder_days || 0, lunar || 0, user_id]
-        );
-        return { id: result.insertId, ...birthdayData };
-    }
-
-    static async update(id, userId, birthdayData) {
-        const { name, birth_date, description, reminder_days, lunar } = birthdayData;
-        const [result] = await db.execute(
-            'UPDATE birthdays SET name = ?, birth_date = ?, description = ?, reminder_days = ?, lunar = ? WHERE id = ? AND user_id = ?',
-            [name, birth_date, description, reminder_days || 0, lunar || 0, id, userId]
-        );
-        return result.affectedRows > 0;
-    }
-
-    static async delete(id, userId) {
-        const [result] = await db.execute(
-            'DELETE FROM birthdays WHERE id = ? AND user_id = ?',
-            [id, userId]
-        );
-        return result.affectedRows > 0;
-    }
-
-    static async findById(id, userId) {
-        const [rows] = await db.execute(
-            'SELECT * FROM birthdays WHERE id = ? AND user_id = ?',
-            [id, userId]
-        );
-        return rows[0];
-    }
-}
+}, {
+    tableName: 'birthdays',
+    timestamps: true,
+    underscored: true
+});
 
 module.exports = Birthday; 

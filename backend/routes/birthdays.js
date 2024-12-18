@@ -1,85 +1,83 @@
 const express = require('express');
 const router = express.Router();
+const { authenticateToken } = require('../middleware/auth');
 const Birthday = require('../models/Birthday');
-const auth = require('../middleware/auth');
 
-// 获取所有生日信息
-router.get('/', auth, async (req, res) => {
+// 获取所有生日
+router.get('/', authenticateToken, async (req, res) => {
     try {
-        console.log('用户ID:', req.user.id);
-        const birthdays = await Birthday.findAll(req.user.id);
-        console.log('查询结果:', birthdays);
+        const birthdays = await Birthday.findAll({
+            where: { user_id: req.user.id },
+            order: [['birth_date', 'ASC']]
+        });
         res.json(birthdays);
-    } catch (err) {
-        console.error('查询失败:', err);
-        res.status(500).json({ message: '服务器错误' });
+    } catch (error) {
+        console.error('获取生日列表失败:', error);
+        res.status(500).json({ message: '获取生日列表失败' });
     }
 });
 
-// 获取单个生日信息
-router.get('/:id', auth, async (req, res) => {
+// 添加生日
+router.post('/', authenticateToken, async (req, res) => {
     try {
-        const birthday = await Birthday.findById(req.params.id, req.user.id);
-        if (!birthday) {
-            return res.status(404).json({ message: '未找到该生日信息' });
-        }
-        res.json(birthday);
-    } catch (err) {
-        res.status(500).json({ message: '服务器错误' });
-    }
-});
-
-// 添加新的生日信息
-router.post('/', auth, async (req, res) => {
-    try {
-        const { name, birth_date, description, reminder_days, lunar } = req.body;
-        const birthday = await Birthday.create({
-            name,
-            birth_date,
-            description,
-            reminder_days,
-            lunar,
+        const birthdayData = {
+            ...req.body,
             user_id: req.user.id
-        });
+        };
+        
+        const birthday = await Birthday.create(birthdayData);
         res.status(201).json(birthday);
-    } catch (err) {
-        console.error('创建失败:', err);
-        res.status(400).json({ message: '创建失败' });
+    } catch (error) {
+        console.error('添加生日失败:', error);
+        res.status(500).json({ message: '添加生日失败' });
     }
 });
 
-// 更新生日信息
-router.put('/:id', auth, async (req, res) => {
+// 更新生日
+router.put('/:id', authenticateToken, async (req, res) => {
     try {
-        const { name, birth_date, description, reminder_days, lunar } = req.body;
-        const success = await Birthday.update(req.params.id, req.user.id, {
-            name,
-            birth_date,
-            description,
-            reminder_days,
-            lunar
+        const [updated] = await Birthday.update(req.body, {
+            where: { 
+                id: req.params.id,
+                user_id: req.user.id 
+            }
         });
-        if (!success) {
-            return res.status(404).json({ message: '未找到该生日信息' });
+
+        if (updated) {
+            const birthday = await Birthday.findOne({
+                where: { 
+                    id: req.params.id,
+                    user_id: req.user.id 
+                }
+            });
+            res.json(birthday);
+        } else {
+            res.status(404).json({ message: '生日不存在' });
         }
-        const updatedBirthday = await Birthday.findById(req.params.id, req.user.id);
-        res.json(updatedBirthday);
-    } catch (err) {
-        console.error('更新失败:', err);
-        res.status(400).json({ message: '更新失败' });
+    } catch (error) {
+        console.error('更新生日失败:', error);
+        res.status(500).json({ message: '更新生日失败' });
     }
 });
 
-// 删除生日信息
-router.delete('/:id', auth, async (req, res) => {
+// 删除生日
+router.delete('/:id', authenticateToken, async (req, res) => {
     try {
-        const success = await Birthday.delete(req.params.id, req.user.id);
-        if (!success) {
-            return res.status(404).json({ message: '未找到该生日信息' });
+        const deleted = await Birthday.destroy({
+            where: { 
+                id: req.params.id,
+                user_id: req.user.id 
+            }
+        });
+
+        if (deleted) {
+            res.json({ message: '删除成功' });
+        } else {
+            res.status(404).json({ message: '生日不存在' });
         }
-        res.json({ message: '删除成功' });
-    } catch (err) {
-        res.status(500).json({ message: '删除失败' });
+    } catch (error) {
+        console.error('删除生日失败:', error);
+        res.status(500).json({ message: '删除生日失败' });
     }
 });
 
