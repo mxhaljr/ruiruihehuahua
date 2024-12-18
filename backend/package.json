@@ -16,7 +16,6 @@
     "dotenv": "^16.4.7",
     "express": "^4.17.1",
     "jsonwebtoken": "^9.0.2",
-    "life-day-backend": "file:",
     "mysql2": "^3.9.2",
     "nodemailer": "^6.9.16",
     "pg": "^8.11.3",
