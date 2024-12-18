@@ -13,23 +13,13 @@ const countdownsRouter = require('./routes/countdowns');
 const app = express();
 
 // CORS 配置
-app.use(cors({
-    origin: [
-        'http://localhost:5500',
-        'http://127.0.0.1:5500',
-        'https://ruiruihehuahua.netlify.app',
-        'https://ruiruihehuahua.vercel.app'
-    ],
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
-    credentials: true
-}));
+app.use(cors());
 
 // 中间件
 app.use(express.json());
 
 // 根路由
-app.get('/', (req, res) => {
+app.get('/api', (req, res) => {
     res.json({
         message: '服务器正常运行',
         time: new Date().toISOString()
@@ -37,7 +27,7 @@ app.get('/', (req, res) => {
 });
 
 // API 状态检查路由
-app.get('/status', (req, res) => {
+app.get('/api/status', (req, res) => {
     console.log('收到状态检查请求');
     res.json({ 
         status: 'online',
@@ -47,11 +37,11 @@ app.get('/status', (req, res) => {
 });
 
 // 路由
-app.use('/auth', authRoutes);
-app.use('/birthdays', birthdaysRoutes);
-app.use('/anniversaries', anniversariesRoutes);
-app.use('/news', newsRoutes);
-app.use('/countdowns', countdownsRouter);
+app.use('/api/auth', authRoutes);
+app.use('/api/birthdays', birthdaysRoutes);
+app.use('/api/anniversaries', anniversariesRoutes);
+app.use('/api/news', newsRoutes);
+app.use('/api/countdowns', countdownsRouter);
 
 // 404 处理
 app.use((req, res, next) => {
