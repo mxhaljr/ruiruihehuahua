@@ -41,7 +41,7 @@ class PageManager {
 // 如果window.app不存在，初始化它
 if (!window.app) {
     window.app = {
-        apiBaseUrl: 'http://localhost:3000/api',
+        apiBaseUrl: 'https://ruiruihehuahua.vercel.app/api',
         auth: {
             getToken() {
                 return localStorage.getItem('token');
