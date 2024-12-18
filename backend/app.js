@@ -28,8 +28,16 @@ app.use(cors({
 // 中间件
 app.use(express.json());
 
+// 根路由
+app.get('/', (req, res) => {
+    res.json({
+        message: '服务器正常运行',
+        time: new Date().toISOString()
+    });
+});
+
 // API 状态检查路由
-app.get('/api/status', (req, res) => {
+app.get('/status', (req, res) => {
     console.log('收到状态检查请求');
     res.json({ 
         status: 'online',
@@ -39,11 +47,11 @@ app.get('/api/status', (req, res) => {
 });
 
 // 路由
-app.use('/api/auth', authRoutes);
-app.use('/api/birthdays', birthdaysRoutes);
-app.use('/api/anniversaries', anniversariesRoutes);
-app.use('/api/news', newsRoutes);
-app.use('/api/countdowns', countdownsRouter);
+app.use('/auth', authRoutes);
+app.use('/birthdays', birthdaysRoutes);
+app.use('/anniversaries', anniversariesRoutes);
+app.use('/news', newsRoutes);
+app.use('/countdowns', countdownsRouter);
 
 // 404 处理
 app.use((req, res, next) => {
@@ -93,11 +101,13 @@ initializeDatabase().then(() => {
     console.log('环境:', process.env.NODE_ENV);
     console.log('数据库 URL:', process.env.DATABASE_URL ? '已配置' : '未配置');
     
-    // 添加端口监听
-    const port = process.env.PORT || 3000;
-    app.listen(port, () => {
-        console.log(`服务器运行在端口 ${port}`);
-    });
+    // 仅在非 Vercel 环境下监听端口
+    if (process.env.VERCEL !== '1') {
+        const port = process.env.PORT || 3000;
+        app.listen(port, () => {
+            console.log(`服务器运行在端口 ${port}`);
+        });
+    }
 });
 
 // 导出应用实例
