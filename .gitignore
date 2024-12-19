@@ -30,4 +30,7 @@ Thumbs.db
 
 # 构建输出
 dist/
-build/ 
+build/
+
+# Vercel
+.vercel
