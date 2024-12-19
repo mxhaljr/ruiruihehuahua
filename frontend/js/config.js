@@ -1,7 +1,7 @@
 // 配置对象
 const CONFIG = {
     // API基础URL配置
-    API_BASE_URL: 'http://localhost:3000/api',  // 直接使用本地开发环境的 URL
+    API_BASE_URL: 'https://ruiruihehuahua.vercel.app',
     encryptKey: 'your-secret-key-here'
 };
 
